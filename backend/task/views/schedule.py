@@ -14,7 +14,7 @@ from django.db import connections
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 
-from teprunnerbackend import settings
+from pytestx import settings
 
 scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
 scheduler.add_jobstore(DjangoJobStore())

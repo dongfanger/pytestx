@@ -19,7 +19,7 @@ class Project(BaseTable):
     env_config = models.CharField("环境配置", max_length=100, null=False)
     git_repository = models.CharField("Git仓库", max_length=100, null=True, blank=True)
     git_branch = models.CharField("Git分支", max_length=100, null=True, blank=True)
-    last_sync_time = models.DateTimeField("运行时间", null=True, blank=True)
+    last_sync_time = models.DateTimeField("上次同步时间", null=True, blank=True)
 
 
 class Case(BaseTable):

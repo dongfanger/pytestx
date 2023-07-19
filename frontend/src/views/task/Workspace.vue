@@ -33,7 +33,7 @@ export default {
     scaffold() {
       let params = {};
       this.$http
-          .post(`/teprunner/scaffold`, params, { responseType: "blob" })
+          .post(`/tasks/scaffold`, params, { responseType: "blob" })
           .then(res => {
             let blob = new Blob([res.data], { type: "application/zip" });
             let url = window.URL.createObjectURL(blob);

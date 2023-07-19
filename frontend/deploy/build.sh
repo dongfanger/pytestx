@@ -1,5 +1,5 @@
 #!/bin/bash
-PkgName='teprunner-frontend'
+PkgName='frontend'
 
 Dockerfile='./Dockerfile'
 DockerContext=../

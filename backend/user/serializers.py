@@ -20,7 +20,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # 从表中直接取值
-        fields = ['username', 'nickname', 'roleName']
+        fields = ['id', 'username', 'nickname', 'roleName']
 
     def get_roleName(self, instance):
         # instance就是class Meta里面指定的model

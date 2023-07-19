@@ -2,8 +2,7 @@
   <div class="login-body" :style="`background-image: url(${require('@/assets/image/login-bg.png')})`">
     <div class="login-box">
       <div class="login-title">
-        <img class="login-logo" :src="require('@/assets/image/teprunner.png')" alt="logo" />
-        <p>测试平台</p>
+        <p>pytestx</p>
       </div>
       <div class="login-info">
         <el-form ref="form" class="form-box" :model="form" :rules="formRules">

@@ -20,9 +20,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from teprunner.models import Case, TaskResult, Task, TaskCase
-from teprunner.serializers import TaskResultSerializer
-from teprunnerbackend.settings import SANDBOX_PATH
+from task.models import Case, TaskResult, Task, TaskCase
+from task.serializers import TaskResultSerializer
+from pytestx.settings import SANDBOX_PATH
 
 
 class TaskContext:

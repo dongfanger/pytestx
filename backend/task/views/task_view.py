@@ -19,11 +19,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from teprunner.models import Task, TaskCase, Case, TaskResult
-from teprunner.serializers import TaskSerializer, TaskCaseSerializer, TaskResultSerializer, CaseSerializer
-from teprunner.views.run import run_task_engine
-from teprunner.views.schedule import scheduler
-from teprunnerbackend.settings import SANDBOX_PATH
+from task.models import Task, TaskCase, Case, TaskResult
+from task.serializers import TaskSerializer, TaskCaseSerializer, TaskResultSerializer, CaseSerializer
+from task.views.run_view import run_task_engine
+from task.views.schedule import scheduler
+from pytestx.settings import SANDBOX_PATH
 from user.pagination import CustomPagination
 
 
@@ -242,13 +242,10 @@ def case_result(request, *args, **kwargs):
     return Response(data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
 def report(request, *args, **kwargs):
     task_id = kwargs["task_id"]
-    request_jwt = request.headers.get("Authorization").replace("Bearer ", "")
-    request_jwt_decoded = jwt.decode(request_jwt, verify=False, algorithms=['HS512'])
-    run_user_id = request_jwt_decoded["user_id"]
-    task_result = TaskResult.objects.filter(task_id=task_id, run_user_id=run_user_id).order_by('-run_time')[0]
+    user_id = kwargs["user_id"]
+    task_result = TaskResult.objects.filter(task_id=task_id, run_user_id=user_id).order_by('-run_time')[0]
     report_path = task_result.report_path
 
     with open(os.path.join(SANDBOX_PATH, report_path), 'r') as f:

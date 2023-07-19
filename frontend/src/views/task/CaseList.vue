@@ -129,7 +129,7 @@ export default {
   },
   methods: {
     async getTableData() {
-      let url = `/teprunner/tasks/${this.taskInfo.id}/cases`;
+      let url = `/tasks/${this.taskInfo.id}/cases`;
       let params = [];
       let keys = Object.keys(this.searchForm);
       keys.forEach(key => {
@@ -159,7 +159,7 @@ export default {
       })
         .then(async () => {
           this.isLoading = true;
-          let url = `/teprunner/tasks/${this.taskInfo.id}/cases/${row.caseId}`;
+          let url = `/tasks/${this.taskInfo.id}/cases/${row.caseId}`;
           await this.$http
             .delete(url)
             .then(async res => {
@@ -189,7 +189,7 @@ export default {
     },
     addCaseSelection(data) {
       if (data && data.length) {
-        let url = `/teprunner/tasks/${this.taskInfo.id}/cases`;
+        let url = `/tasks/${this.taskInfo.id}/cases`;
         let addCaseIds = data.map(item => item.id);
         let params = {
           caseIds: addCaseIds,
@@ -222,7 +222,7 @@ export default {
         excludeTaskId: this.taskInfo.id,
         projectId,
       };
-      let url = `/teprunner/cases`;
+      let url = `/tasks/cases`;
       try {
         let { data } = await this.$http.get(url, { params: params });
         if (data) {

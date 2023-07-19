@@ -70,7 +70,7 @@ export default {
   },
   methods: {
     getDetail() {
-      this.$http.get(`/teprunner/projects/${this.id}`).then(({ data }) => {
+      this.$http.get(`/tasks/projects/${this.id}`).then(({ data }) => {
         this.projectForm.name = data.name;
         this.projectForm.envConfig = data.envConfig;
         this.projectForm.gitRepository = data.gitRepository;
@@ -107,10 +107,10 @@ export default {
         gitBranch,
       };
       let $method = "post";
-      let $url = "/teprunner/projects";
+      let $url = "/tasks/projects";
       if (this.id) {
         $method = "put";
-        $url = `/teprunner/projects/${this.id}`;
+        $url = `/tasks/projects/${this.id}`;
       }
       this.$http[$method]($url, params)
         .then(() => {

@@ -51,7 +51,7 @@ export default {
       this.$set(row, "buttonLoading", true);
       let $url;
       let $method;
-      $url = `/teprunner/projects/${row.id}/gitSync`;
+      $url = `/tasks/projects/${row.id}/gitSync`;
       $method = "post";
       this.$http[$method]($url)
         .then(() => {
@@ -65,7 +65,7 @@ export default {
     getProjectList() {
       this.loading = true;
       this.$http
-        .get("/teprunner/projects")
+        .get("/tasks/projects")
         .then(({ data: { items } }) => {
           if (items) {
             this.tableData = items.map(item => {

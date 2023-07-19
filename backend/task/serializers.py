@@ -10,7 +10,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
-from teprunner.models import Project, Case, Task, TaskCase, TaskResult
+from task.models import Project, Case, Task, TaskCase, TaskResult
 from user.models import User
 
 

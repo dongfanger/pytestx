@@ -1,6 +1,5 @@
 # Create your views here.
 import os
-import re
 import time
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,10 +9,10 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from teprunner.models import Project, Case, TaskCase
-from teprunner.serializers import ProjectSerializer, CaseSerializer
-from teprunner.utils.git_util import git_pull
-from teprunnerbackend.settings import SANDBOX_PATH
+from pytestx.settings import SANDBOX_PATH
+from task.models import Project, Case, TaskCase
+from task.serializers import ProjectSerializer, CaseSerializer
+from task.utils.git_util import git_pull
 
 
 class ProjectViewSet(ModelViewSet):
@@ -96,13 +95,14 @@ def save():
             task_case.delete()
 
     data = {
-            "desc": "desc",
-            "creatorNickname": "admin",
-            "projectId": GitSyncConfig.project_id,
-            "filename": "",
-            "filepath": ""
+        "desc": "desc",
+        "creatorNickname": "admin",
+        "projectId": GitSyncConfig.project_id,
+        "filename": "",
+        "filepath": ""
     }
     for filename, filepath in to_add_cases:
+        data["desc"] = filename
         data["filename"] = filename
         data["filepath"] = filepath
         serializer = CaseSerializer(data=data)
@@ -110,6 +110,7 @@ def save():
         serializer.save()
 
     for filename, filepath in to_update_cases:
+        data["desc"] = filename
         data["filename"] = filename
         data["filepath"] = filepath
         case = Case.objects.get(project_id=project_id, filepath=filepath)
@@ -127,4 +128,4 @@ def git_sync(request, *args, **kwargs):
     project = Project.objects.get(id=project_id)
     project.last_sync_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     project.save()
-    return Response({"msg": "同步成功"}, status=status.HTTP_200_OK)
+    return Response({"msg": "同步成功", "lastSyncTime": project.last_sync_time}, status=status.HTTP_200_OK)

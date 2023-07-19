@@ -1,20 +1,12 @@
 <template>
   <NavLeft>
     <div slot="menuItem">
-      <el-menu-item index="/teprunner/workspace">
+      <el-menu-item index="/task/workspace">
         <i class="el-icon-s-home"></i>
         <span slot="title">工作台</span>
       </el-menu-item>
-      <el-menu-item index="/teprunner/gitSync">
-        <i class="el-icon-attract"></i>
-        <span slot="title">Git同步</span>
-      </el-menu-item>
-<!--      <el-menu-item index="/teprunner/case">-->
-<!--        <i class="el-icon-s-management"></i>-->
-<!--        <span slot="title">用例管理</span>-->
-<!--      </el-menu-item>-->
-      <el-menu-item index="/teprunner/task">
-        <i class="el-icon-alarm-clock"></i>
+      <el-menu-item index="/task/taskManagement">
+        <i class="el-icon-s-management"></i>
         <span slot="title">任务管理</span>
       </el-menu-item>
     </div>
@@ -35,7 +27,7 @@ export default {
       let localProjectEnvList = JSON.parse(localStorage.getItem("projectEnvList"));
       if (!localProjectEnvList) {
         this.$http
-          .get("/teprunner/projects/env")
+          .get("/tasks/projects/env")
           .then(({ data: { projectEnvList, curProjectEnv } }) => {
             if (projectEnvList) {
               this.projectEnvList = projectEnvList;

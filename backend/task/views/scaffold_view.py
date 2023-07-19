@@ -14,7 +14,7 @@ import zipfile
 from django.http import StreamingHttpResponse
 from rest_framework.decorators import api_view
 
-from teprunnerbackend import settings
+from pytestx import settings
 
 
 def make_zip(source_dir, zip_filename):

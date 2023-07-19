@@ -1,17 +1,21 @@
 <template>
   <div>
-    <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'task'"
+    <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'taskManagement'"
                  @changeProject="changeProject"></project-env>
     <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'addTask'" @changeProject="changeProject"
                  :showEnv="false"></project-env>
     <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'editTask'"
                  @changeProject="changeProject"
                  :showEnv="false" :project-disabled="true"></project-env>
-    <div class="task-manage-index" v-if="$route.name === 'task'">
+    <div class="task-manage-index" v-if="$route.name === 'taskManagement'">
       <div style="float: left" class="control-list">
         <el-button type="primary" icon="el-icon-plus" @click="addTask">
           新增任务
         </el-button>
+        <el-button type="text" @click="gitSync" style="margin-left: 30px">
+          <i :class="['el-icon-refresh', { 'spin': isRefreshing }]"></i> 同步项目
+        </el-button>
+        <span style="font-size: small; margin-left: 10px">上次同步时间：{{ lastSyncTime }}</span>
       </div>
       <div style="clear: both" class="content-info" :loading="tableLoading">
         <div class="content-header">
@@ -94,6 +98,8 @@ export default {
       total: 0,
       tableData: [],
       tableLoading: false,
+      lastSyncTime: "无",
+      isRefreshing: false
     };
   },
   components: {ProjectEnv},
@@ -109,10 +115,11 @@ export default {
       });
       let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
       let projectId = curProjectEnv.curProjectId;
+      this.getLastSyncTime(projectId);
       if (projectId) {
         params.push(`projectId=${projectId}`);
       }
-      let url = "/teprunner/tasks?" + params.join("&");
+      let url = "/tasks?" + params.join("&");
       this.tableLoading = true;
       await this.$http.get(url).then(async ({data}) => {
         this.tableData = data.items || [];
@@ -125,6 +132,19 @@ export default {
 
       this.tableLoading = false;
     },
+    getLastSyncTime(projectId) {
+      this.$http
+        .get("/tasks/projects")
+        .then(({data: {items}}) => {
+          if (items) {
+            items.map(item => {
+              if (item.id === projectId) {
+                this.lastSyncTime = item.lastSyncTime;
+              }
+            });
+          }
+        })
+    },
     addTask() {
       if (!isProjectExisted()) {
         this.$notifyMessage(`请先创建项目`, {type: "error"});
@@ -135,6 +155,23 @@ export default {
         name: "addTask",
       });
     },
+    gitSync() {
+      this.isRefreshing = true;
+      let $url;
+      let $method;
+      let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
+      let curProjectId = curProjectEnv.curProjectId;
+      $url = `/tasks/projects/${curProjectId}/gitSync`;
+      $method = "post";
+      this.$http[$method]($url)
+        .then(({data}) => {
+          this.$notifyMessage(`同步成功`, {type: "success"});
+          this.lastSyncTime = data.lastSyncTime;
+        })
+        .finally(() => {
+          this.isRefreshing = false;
+        });
+    },
     search() {
       this.searchForm.page = 1;
       this.getTableData();
@@ -143,12 +180,8 @@ export default {
       return {color: "blue", cursor: "pointer", "text-decoration": "underline"};
     },
     openReport(row) {
-      const newWindow = window.open('', '_blank');
-      this.$http
-          .get(`/teprunner/tasks/${row.id}/report`)
-          .then(({ data }) => {
-            newWindow.document.write(data);
-          })
+      let userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        window.open(`${process.env.VUE_APP_apiServer}/api/tasks/${row.id}/${userInfo.id}/report`, '_blank');
     },
     runTask(row) {
       this.$set(row, "loading", true);
@@ -161,7 +194,7 @@ export default {
         runEnv,
         runUserNickname,
       };
-      this.$http.post(`/teprunner/tasks/${row.id}/run`, params).then(({data: {msg}}) => {
+      this.$http.post(`/tasks/${row.id}/run`, params).then(({data: {msg}}) => {
         this.$notifyMessage(msg, {type: "success"});
         this.getTableData();
         this.$set(row, "loading", false);
@@ -175,7 +208,7 @@ export default {
         type: "warning",
       }).then(async () => {
         this.tableLoading = true;
-        let url = `/teprunner/tasks/${row.id}`;
+        let url = `/tasks/${row.id}`;
         await this.$http.delete(url).then(async () => {
           this.$notifyMessage("删除成功", {type: "success"});
           await this.getTableData();
@@ -216,19 +249,11 @@ export default {
         name: "caseList",
       });
     },
-    gotoTaskResult(row, searchType) {
-      row.searchType = searchType;
-      let rowInfo = JSON.stringify(row);
-      localStorage.setItem("taskInfo", rowInfo);
-      this.$router.push({
-        name: "taskResult",
-      });
-    },
   },
   watch: {
     $route: {
       handler(to) {
-        if (to.name === "task") {
+        if (to.name === "taskManagement") {
           this.getTableData();
         }
       },
@@ -241,5 +266,18 @@ export default {
 .content-table .el-table td {
   height: 64px;
   line-height: 64px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

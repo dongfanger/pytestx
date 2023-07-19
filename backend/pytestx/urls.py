@@ -1,4 +1,4 @@
-"""teprunnerbackend URL Configuration
+"""pytestx URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.1/topics/http/urls/
@@ -18,5 +18,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('api/users/', include('user.urls')),
-    path('api/teprunner/', include('teprunner.urls')),
+    path('api/tasks/', include('task.urls')),
 ]

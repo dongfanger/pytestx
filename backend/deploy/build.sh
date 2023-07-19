@@ -1,5 +1,5 @@
 #!/bin/bash
-PkgName='teprunner-backend'
+PkgName='backend'
 
 Dockerfile='./Dockerfile'
 DockerContext=../

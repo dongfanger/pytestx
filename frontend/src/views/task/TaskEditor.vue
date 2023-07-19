@@ -151,13 +151,13 @@ export default {
             projectId,
           };
           if (this.taskId) {
-            let url = `/teprunner/tasks/${this.taskId}`;
+            let url = `/tasks/${this.taskId}`;
             this.$http.put(url, param).then(() => {
               this.back();
               this.$notifyMessage("修改任务成功", { type: "success" });
             });
           } else {
-            let url = `/teprunner/tasks`;
+            let url = `/tasks`;
             this.$http.post(url, param).then(() => {
               this.back();
               this.$notifyMessage("新增任务成功", { type: "success" });

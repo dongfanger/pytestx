@@ -3,7 +3,7 @@
     <div class="header">
       <router-link :to="{ name: 'home' }" class="logo">
         <img src="../../assets/image/logo.png" alt="logo" />
-        <span>测试平台</span>
+        <span>pytestx</span>
       </router-link>
       <ul class="header-nav">
         <router-link tag="li" v-for="auth in authList" :key="auth.id" :to="{ name: auth.id }"

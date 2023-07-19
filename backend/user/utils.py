@@ -8,7 +8,7 @@
 """
 from rest_framework import status
 from rest_framework.views import exception_handler
-from teprunnerbackend.settings import MENU_AUTH
+from pytestx.settings import MENU_AUTH
 
 from user.models import Role, UserRole
 from user.serializers import UserLoginSerializer

@@ -87,7 +87,7 @@ export default {
       let params = [];
       params.push(`searchType=${this.taskInfo.searchType}`);
       this.$http
-        .get(`/teprunner/tasks/${this.taskInfo.id}/result?` + params.join("&"))
+        .get(`/tasks/${this.taskInfo.id}/result?` + params.join("&"))
         .then(({ data }) => {
           if (data.items) {
             this.tableData = data.items || [];

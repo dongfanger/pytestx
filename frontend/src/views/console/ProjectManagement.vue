@@ -92,7 +92,7 @@ export default {
       let $method;
       let params = {};
       if (btnText === "删除") {
-        $url = `/teprunner/projects/${id}`;
+        $url = `/tasks/projects/${id}`;
         $method = "delete";
       }
       this.$http[$method]($url, params).then(() => {
@@ -109,7 +109,7 @@ export default {
         sortField: "id",
       };
       this.$http
-        .get("/teprunner/projects", { params: filterNullValue(params) })
+        .get("/tasks/projects", { params: filterNullValue(params) })
         .then(({ data: { items, totalNum } }) => {
           this.pageParams.totalNum = totalNum;
           if (items) {

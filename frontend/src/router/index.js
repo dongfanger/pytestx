@@ -3,7 +3,7 @@ import VueRouter from "vue-router";
 import login from "@/views/login";
 import home from "@/views/home";
 import console from "@/views/console";
-import teprunner from "@/views/teprunner";
+import task from "@/views/task";
 
 Vue.use(VueRouter);
 
@@ -22,31 +22,31 @@ const routes = [
       requireAuth: true,
     },
     component: home,
-    redirect: "teprunner/workspace",
+    redirect: "task/workspace",
     children: [
       {
-        path: "teprunner",
-        name: "teprunner",
+        path: "task",
+        name: "task",
         meta: {
-          title: "接口自动化",
+          title: "任务调度",
         },
-        component: teprunner,
-        redirect: "teprunner/workspace",
+        component: task,
+        redirect: "task/workspace",
         children: [
           {
             path: "workspace",
             meta: {
               title: "工作台",
             },
-            component: () => import("@/views/teprunner/Workspace.vue"),
+            component: () => import("@/views/task/Workspace.vue"),
           },
           {
-            path: "task",
-            name: "task",
+            path: "taskManagement",
+            name: "taskManagement",
             meta: {
               title: "任务管理",
             },
-            component: () => import("@/views/teprunner/task/TaskManagement.vue"),
+            component: () => import("@/views/task/TaskManagement.vue"),
             children: [
               {
                 path: "addTask",
@@ -54,7 +54,7 @@ const routes = [
                 meta: {
                   title: "添加任务",
                 },
-                component: () => import("@/views/teprunner/task/TaskEditor"),
+                component: () => import("@/views/task/TaskEditor"),
               },
               {
                 path: "editTask",
@@ -62,7 +62,7 @@ const routes = [
                 meta: {
                   title: "编辑任务",
                 },
-                component: () => import("@/views/teprunner/task/TaskEditor"),
+                component: () => import("@/views/task/TaskEditor"),
               },
               {
                 path: "caseList",
@@ -70,7 +70,7 @@ const routes = [
                 meta: {
                   title: "用例列表",
                 },
-                component: () => import("@/views/teprunner/task/CaseList"),
+                component: () => import("@/views/task/CaseList"),
               },
               {
                 path: "taskResult",
@@ -78,7 +78,7 @@ const routes = [
                 meta: {
                   title: "任务运行结果",
                 },
-                component: () => import("@/views/teprunner/task/TaskResult"),
+                component: () => import("@/views/task/TaskResult"),
               },
             ],
           },
@@ -87,7 +87,7 @@ const routes = [
             meta: {
               title: "Git同步",
             },
-            component: () => import("@/views/teprunner/GitSync.vue"),
+            component: () => import("@/views/task/GitSync.vue"),
           },
         ],
       },
