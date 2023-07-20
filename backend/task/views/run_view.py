@@ -40,6 +40,7 @@ class TaskContext:
         self.run_env = ""
         self.run_user_id = None
         self.container_task_path = ""
+        self.case_filepath_list = []
 
 
 def write_conf_yaml(project_dir, env_name):
@@ -77,6 +78,8 @@ def find_files_with_same_name(directory, known_file):
 
 
 def pull_case(filepath, task_context):
+    task_context.case_filepath_list.append(filepath)
+    # todo 复制用例只在降级时才做，此处代码需要优化
     file_path_abs = os.path.join(SANDBOX_PATH, filepath)
     shutil.copy2(file_path_abs, task_context.container_task_path)
     same_name_files = find_files_with_same_name(os.path.dirname(file_path_abs), filepath.split(os.sep)[-1])
@@ -92,10 +95,15 @@ def save_task_result(pytest_result):
     task_context = pytest_result.result()
     task_context.case_count += 1
     if task_context.case_count == task_context.case_num:
-        os.chdir(task_context.container_task_path)
         report_path = os.path.join(task_context.project_name, "reports", task_context.current_time + ".html")
-        cmd = f"pytest --html={os.path.join(SANDBOX_PATH, report_path)} --self-contained-html"
-        subprocess.getoutput(cmd)
+        try:
+            os.chdir(SANDBOX_PATH)
+            cmd = f"pytest {' '.join(task_context.case_filepath_list)} --html={os.path.join(SANDBOX_PATH, report_path)} --self-contained-html"
+            subprocess.getoutput(cmd)
+        except:  # 如果命令行参数添加路径，字符超长报错，降级为复制用例（该场景未测试）
+            os.chdir(task_context.container_task_path)
+            cmd = f"pytest --html={os.path.join(SANDBOX_PATH, report_path)} --self-contained-html"
+            subprocess.getoutput(cmd)
         data = {
             "taskId": task_context.task_id,
             "result": "执行成功",

@@ -96,7 +96,7 @@ def save():
 
     data = {
         "desc": "desc",
-        "creatorNickname": "admin",
+        "creator_id": 1,  # todo 根据当前登录用户设置
         "projectId": GitSyncConfig.project_id,
         "filename": "",
         "filepath": ""
@@ -121,6 +121,7 @@ def save():
 
 @api_view(['POST'])
 def git_sync(request, *args, **kwargs):
+    # todo Windows同步项目后，保存的文件路径，在切换到Mac时，不兼容（当前只能手动重新同步）
     project_id = kwargs["pk"]
     GitSyncConfig.project_id = project_id
     pull()
