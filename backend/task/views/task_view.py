@@ -248,7 +248,7 @@ def report(request, *args, **kwargs):
     task_result = TaskResult.objects.filter(task_id=task_id, run_user_id=user_id).order_by('-run_time')[0]
     report_path = task_result.report_path
 
-    with open(os.path.join(SANDBOX_PATH, report_path), 'r') as f:
+    with open(os.path.join(SANDBOX_PATH, report_path), 'r', encoding="utf8") as f:
         html_content = f.read()
 
     return HttpResponse(html_content, content_type='text/html')
