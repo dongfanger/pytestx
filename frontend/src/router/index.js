@@ -5,6 +5,12 @@ import home from "@/views/home";
 import console from "@/views/console";
 import task from "@/views/task";
 
+const original = VueRouter.prototype.push;
+
+VueRouter.prototype.push = function push(location) {
+  return original.call(this, location).catch(err => err);
+}
+
 Vue.use(VueRouter);
 
 const routes = [
