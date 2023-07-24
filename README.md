@@ -28,7 +28,7 @@ Docker：
 
 - 后端：
   
-    打包 docker build -f ./backend/deploy/Dockerfile -t backend:v1.0 ./backend
+    打包 docker build -f ./backend/deploy/Dockerfile -t backend ./backend
     
     运行 docker run -p 8000:80 backend
   
@@ -38,7 +38,7 @@ Docker：
     编译 docker run --rm -v $(pwd)/frontend/:/data/src  -w /data/src/ node:latest  /bin/sh -c "npm install && npm run build"
     (本地可跳过，在frontend目录执行npm install && npm run build是一样的)    
    
-    打包 docker build -f ./frontend/deploy/Dockerfile -t frontend:v1.0 ./frontend
+    打包 docker build -f ./frontend/deploy/Dockerfile -t frontend ./frontend
   
     配置 修改frontend/deploy/nginx.conf的proxy_pass为宿主机IP地址
   
