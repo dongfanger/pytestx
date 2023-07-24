@@ -28,7 +28,7 @@ Docker：
 
 - 后端：
   
-    打包 docker build --progress=plain -f ./backend/deploy/Dockerfile -t backend:v1.0 ./backend
+    打包 docker build -f ./backend/deploy/Dockerfile -t backend:v1.0 ./backend
     
     运行 docker run -p 8000:80 backend
   
