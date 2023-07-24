@@ -7,6 +7,7 @@ RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shang
 
 WORKDIR /app/release
 COPY . .
+RUN ls /app/release
 RUN  pip install -r ./requirements.txt -i \
     https://pypi.tuna.tsinghua.edu.cn/simple \
     --default-timeout=3000
