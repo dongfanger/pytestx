@@ -39,5 +39,7 @@ Docker：
     (本地可跳过，在frontend目录执行npm install && npm run build是一样的)    
    
     打包 docker build -f ./frontend/deploy/Dockerfile -t frontend:v1.0 ./frontend
+  
     配置 修改frontend/deploy/nginx.conf的proxy_pass为宿主机IP地址
+  
     运行 docker run -p 8080:80 frontend
