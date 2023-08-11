@@ -161,3 +161,5 @@ MENU_AUTH = {
 }
 
 SANDBOX_PATH = os.path.join(BASE_DIR, "task", "sandbox")
+
+TEP_PROJECT_GIT_URL = "https://gitee.com/dongfanger/tep-project.git"

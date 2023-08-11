@@ -3,17 +3,6 @@
     <div style="text-align: left; font-size: 14px; margin-left: 20px">
       <br />
       <br />
-      <h1><span style="color: darkred">本平台只支持任务调度，真正实现接口自动化80%本地编写，20%交由平台管理的平衡、高效理念</span></h1>
-      <br />
-      <br />
-      <h3>
-        <span style="background-color:#FFE500;">教程</span>
-      </h3>
-      <br />
-      <p>
-        <a href="https://dongfanger.gitee.io/blog/" target="_blank">https://dongfanger.gitee.io/blog/</a>
-      </p>
-      <br />
       <h3>
         <span style="background-color:#FFE500;">下载</span>
       </h3>

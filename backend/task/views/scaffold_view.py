@@ -15,6 +15,8 @@ from django.http import StreamingHttpResponse
 from rest_framework.decorators import api_view
 
 from pytestx import settings
+from pytestx.settings import TEP_PROJECT_GIT_URL
+from task.utils.git_util import git_pull
 
 
 def make_zip(source_dir, zip_filename):
@@ -44,6 +46,7 @@ def copy_folder(source_folder, destination_folder, ignore_folders):
 
 def create_scaffold(project_dir):
     tep_dir = os.path.join(settings.SANDBOX_PATH, "tep-project")
+    git_pull(TEP_PROJECT_GIT_URL, "master", tep_dir)
     copy_folder(tep_dir, project_dir, ignore_folders=[".idea", ".pytest_cache", "venv", "__pycache__", ".git"])
 
 
