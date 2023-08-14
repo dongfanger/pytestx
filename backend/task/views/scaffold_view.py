@@ -9,6 +9,7 @@
 
 import os
 import shutil
+import uuid
 import zipfile
 
 from django.http import StreamingHttpResponse
@@ -44,18 +45,24 @@ def copy_folder(source_folder, destination_folder, ignore_folders):
     shutil.copytree(source_folder, destination_folder, ignore=shutil.ignore_patterns(*ignore_folders))
 
 
-def create_scaffold(project_dir):
-    tep_dir = os.path.join(settings.SANDBOX_PATH, "tep-project")
+def create_scaffold(temp_dir, project_name):
+    tep_project_name = "tep-project"
+    tep_dir = os.path.join(settings.SANDBOX_PATH, tep_project_name)
     git_pull(TEP_PROJECT_GIT_URL, "master", tep_dir)
-    copy_folder(tep_dir, project_dir, ignore_folders=[".idea", ".pytest_cache", "venv", "__pycache__", ".git"])
+    copy_folder(tep_dir, temp_dir, ignore_folders=[".idea", ".pytest_cache", "venv", "__pycache__", ".git"])
+    os.rename(os.path.join(temp_dir, tep_project_name), os.path.join(temp_dir, project_name))
 
 
 @api_view(['POST'])
 def startproject(request, *args, **kwargs):
+    project_name = request.data.get("projectName")
+    if not project_name:
+        project_name = "new-project"
     export_dir = os.path.join(settings.BASE_DIR, "export")
-    temp_dir = os.path.join(export_dir, "newProject")
-    create_scaffold(temp_dir)
-    zip_filepath = os.path.join(export_dir, "newProject.zip")
+    temp_name = project_name + "-" + str(uuid.uuid1()).replace("-", "")
+    temp_dir = os.path.join(export_dir, temp_name)
+    create_scaffold(temp_dir, project_name)
+    zip_filepath = os.path.join(export_dir, f"{temp_name}.zip")
     make_zip(temp_dir, zip_filepath)
     shutil.rmtree(temp_dir)
 

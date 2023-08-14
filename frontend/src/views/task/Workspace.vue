@@ -7,10 +7,14 @@
         <span style="background-color:#FFE500;">下载</span>
       </h3>
       <br />
-      <p>
-        <a href="#" @click="scaffold"><b>项目脚手架</b></a>
-        <br />
-      </p>
+      <el-form :model="downloadForm" ref="searchForm" :inline="true">
+        <el-form-item label="项目名称" prop="keyword">
+          <el-input v-model="downloadForm.projectName" placeholder="项目名称"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="scaffold" type="primary">项目脚手架</el-button>
+        </el-form-item>
+      </el-form>
     </div>
   </div>
 </template>
@@ -18,9 +22,16 @@
 <script>
 export default {
   name: "Workspace",
+  data() {
+    return {
+      downloadForm: {
+        projectName: "",
+      },
+    }
+  },
   methods: {
     scaffold() {
-      let params = {};
+      let params = {"projectName": this.downloadForm.projectName};
       this.$http
           .post(`/tasks/scaffold`, params, { responseType: "blob" })
           .then(res => {
