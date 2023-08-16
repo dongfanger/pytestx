@@ -15,7 +15,6 @@
         }"
       >
         <el-table-column prop="projectName" label="项目名称" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="envConfig" label="环境配置"></el-table-column>
         <el-table-column prop="gitRepository" label="Git仓库"></el-table-column>
         <el-table-column prop="gitBranch" label="Git分支"></el-table-column>
         <el-table-column label="操作" width="320px">
@@ -98,7 +97,7 @@ export default {
       this.$http[$method]($url, params).then(() => {
         this.$notifyMessage(`${btnText}成功`, { type: "success" });
         this.getProjectList();
-        localStorage.removeItem("projectEnvList");
+        localStorage.removeItem("projectList");
       });
     },
     getProjectList() {
@@ -117,7 +116,6 @@ export default {
               return {
                 id: item.id,
                 projectName: item.name,
-                envConfig: item.envConfig,
                 gitRepository: item.gitRepository,
                 gitBranch: item.gitBranch,
               };

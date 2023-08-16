@@ -44,7 +44,6 @@ class TaskViewSet(ModelViewSet):
 
             task = Task.objects.get(name=request.data.get("name"))
             project_id = request.data.get("projectId")
-            task_run_env = request.data.get("taskRunEnv")
             task_status = request.data.get("taskStatus")
             task_crontab = request.data.get("taskCrontab")
             task_added = ""
@@ -54,7 +53,7 @@ class TaskViewSet(ModelViewSet):
                 task_added = scheduler.add_job(func=run_task_engine,
                                                trigger=CronTrigger.from_crontab(task_crontab),
                                                id=str(task.id),
-                                               args=[project_id, task.id, task_run_env, run_user_nickname, user_id],
+                                               args=[project_id, task.id, run_user_nickname, user_id],
                                                max_instances=1,
                                                replace_existing=True)
             data = serializer.data
@@ -72,7 +71,6 @@ class TaskViewSet(ModelViewSet):
             pass
 
         project_id = request.data.get("projectId")
-        task_run_env = request.data.get("taskRunEnv")
         task_status = request.data.get("taskStatus")
         task_crontab = request.data.get("taskCrontab")
         task_updated = ""
@@ -83,7 +81,7 @@ class TaskViewSet(ModelViewSet):
             task_updated = scheduler.add_job(func=run_task_engine,
                                              trigger=CronTrigger.from_crontab(task_crontab),
                                              id=str(task_id),
-                                             args=[project_id, task_id, task_run_env, run_user_nickname, user_id],
+                                             args=[project_id, task_id, run_user_nickname, user_id],
                                              max_instances=1,
                                              replace_existing=True)
         if task_status == "0":
@@ -235,7 +233,6 @@ def case_result(request, *args, **kwargs):
         "result": task_result.result,
         "elapsed": task_result.elapsed,
         "output": task_result.output,
-        "runEnv": task_result.run_env,
         "runUserNickname": task_result.run_user_nickname,
         "runTime": task_result.run_time.strftime("%Y-%m-%d %H:%M:%S")
     }

@@ -1,12 +1,11 @@
 <template>
   <div>
-    <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'taskManagement'"
-                 @changeProject="changeProject"></project-env>
-    <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'addTask'" @changeProject="changeProject"
-                 :showEnv="false"></project-env>
-    <project-env style="float: left; margin-right: 10px" v-if="$route.name === 'editTask'"
-                 @changeProject="changeProject"
-                 :showEnv="false" :project-disabled="true"></project-env>
+    <project style="float: left; margin-right: 10px"
+             v-if="$route.name === 'taskManagement' || $route.name === 'addTask'"
+             @changeProject="changeProject"></project>
+    <project style="float: left; margin-right: 10px" v-if="$route.name === 'editTask'"
+             @changeProject="changeProject"
+             :project-disabled="true"></project>
     <div class="task-manage-index" v-if="$route.name === 'taskManagement'">
       <div style="float: left" class="control-list">
         <el-button type="primary" icon="el-icon-plus" @click="addTask">
@@ -42,7 +41,7 @@
           }" :data="tableData" style="width: 100%">
             <el-table-column prop="id" label="任务ID" width="80px" align="center" show-overflow-tooltip></el-table-column>
             <el-table-column label="任务名称" prop="name" show-overflow-tooltip></el-table-column>
-            <el-table-column prop="runEnv" label="报告" width="180px" align="center"
+            <el-table-column prop="report" label="报告" width="180px" align="center"
                              show-overflow-tooltip>
               <template slot-scope="scope">
                 <div :style="reportStyle()" @click="openReport(scope.row)">
@@ -50,8 +49,6 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="runEnv" label="环境" width="180px" align="center"
-                             show-overflow-tooltip></el-table-column>
             <el-table-column prop="runUserNickname" label="运行人" width="180px" align="center"
                              show-overflow-tooltip></el-table-column>
             <el-table-column prop="runTime" label="运行时间" width="180px" align="center"
@@ -84,7 +81,7 @@
   </div>
 </template>
 <script>
-import ProjectEnv from "@/components/ProjectEnv";
+import Project from "@/components/Project";
 import {isProjectExisted} from "@/utils/commonMethods";
 
 export default {
@@ -102,7 +99,7 @@ export default {
       isRefreshing: false
     };
   },
-  components: {ProjectEnv},
+  components: {Project},
   methods: {
     async getTableData() {
       let keys = Object.keys(this.searchForm);
@@ -113,8 +110,8 @@ export default {
           params.push(`${key}=${this.searchForm[key]}`);
         }
       });
-      let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-      let projectId = curProjectEnv.curProjectId;
+      let curProject = JSON.parse(localStorage.getItem("curProject"));
+      let projectId = curProject.curProjectId;
       this.getLastSyncTime(projectId);
       if (projectId) {
         params.push(`projectId=${projectId}`);
@@ -159,8 +156,8 @@ export default {
       this.isRefreshing = true;
       let $url;
       let $method;
-      let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-      let curProjectId = curProjectEnv.curProjectId;
+      let curProject = JSON.parse(localStorage.getItem("curProject"));
+      let curProjectId = curProject.curProjectId;
       $url = `/tasks/projects/${curProjectId}/gitSync`;
       $method = "post";
       this.$http[$method]($url)
@@ -181,17 +178,15 @@ export default {
     },
     openReport(row) {
       let userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        window.open(`${process.env.VUE_APP_apiServer}/api/tasks/${row.id}/${userInfo.id}/report`, '_blank');
+      window.open(`${process.env.VUE_APP_apiServer}/api/tasks/${row.id}/${userInfo.id}/report`, '_blank');
     },
     runTask(row) {
       this.$set(row, "loading", true);
-      let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-      let curProjectId = curProjectEnv.curProjectId;
-      let runEnv = curProjectEnv.curEnvName;
+      let curProject = JSON.parse(localStorage.getItem("curProject"));
+      let curProjectId = curProject.curProjectId;
       let runUserNickname = JSON.parse(localStorage.getItem("userInfo")).nickname;
       let params = {
         curProjectId,
-        runEnv,
         runUserNickname,
       };
       this.$http.post(`/tasks/${row.id}/run`, params).then(({data: {msg}}) => {

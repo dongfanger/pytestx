@@ -15,11 +15,6 @@
           >
         </el-switch>
       </el-form-item>
-      <el-form-item class="custom-size" prop="taskRunEnv" label="运行环境" v-if="form.taskStatus === '1'">
-        <el-select v-model="form.taskRunEnv" @click.native="getEnvList">
-          <el-option v-for="(item, index) in envList" :key="index" :label="item" :value="item"></el-option>
-        </el-select>
-      </el-form-item>
       <el-form-item class="custom-size" prop="taskCrontab" label="计划时间" v-if="form.taskStatus === '1'">
         <el-input v-model="form.taskCrontab" placeholder="请输入crontab表达式">
           <el-popover slot="suffix" placement="right" width="450" trigger="hover">
@@ -72,21 +67,17 @@ export default {
     return {
       form: {
         name: "",
-        taskRunEnv: "",
         taskStatus: "0",
         taskCrontab: "",
       },
       rules: {
         name: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
-        taskRunEnv: [{ required: true, message: "请选择运行环境", trigger: "blur" }],
         taskCrontab: [{ required: true, message: "请输入crontab表达式", trigger: "blur" }],
       },
       saving: false,
       taskId: "",
-      curEnvName: "",
-      envList: [],
       curProjectId: "",
-      projectEnvList: [],
+      projectList: [],
       popoverActive: false,
       taskText: "关闭",
     };
@@ -97,32 +88,23 @@ export default {
       taskInfo = JSON.parse(taskInfo);
       this.taskId = taskInfo.id;
       this.form.name = taskInfo.name;
-      this.form.taskRunEnv = taskInfo.taskRunEnv;
       this.form.taskStatus = taskInfo.taskStatus;
       this.form.taskCrontab = taskInfo.taskCrontab;
     }
-    this.getProjectEnv();
+    this.getProject();
   },
   methods: {
-    getProjectEnv() {
-      let localProjectEnvList = JSON.parse(localStorage.getItem("projectEnvList"));
-      if (localProjectEnvList) {
-        this.projectEnvList = localProjectEnvList;
+    getProject() {
+      let localProjectList = JSON.parse(localStorage.getItem("projectList"));
+      if (localProjectList) {
+        this.projectList = localProjectList;
       }
     },
     getCurProjectId() {
-      let localCurProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-      if (localCurProjectEnv) {
-        this.curProjectId = localCurProjectEnv.curProjectId;
+      let localCurProject = JSON.parse(localStorage.getItem("curProject"));
+      if (localCurProject) {
+        this.curProjectId = localCurProject.curProjectId;
       }
-    },
-    getEnvList() {
-      this.getCurProjectId();
-      this.projectEnvList.forEach(item => {
-        if (item.projectId === this.curProjectId) {
-          this.envList = item.envList;
-        }
-      });
     },
     setTaskText() {
       if (this.form.taskStatus === "1") {
@@ -141,11 +123,10 @@ export default {
           this.saving = true;
           this.form.name = this.form.name.trim();
           this.form.taskCrontab = this.form.taskCrontab.trim();
-          let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-          let projectId = curProjectEnv.curProjectId;
+          let curProject = JSON.parse(localStorage.getItem("curProject"));
+          let projectId = curProject.curProjectId;
           let param = {
             name: this.form.name,
-            taskRunEnv: this.form.taskRunEnv,
             taskStatus: this.form.taskStatus,
             taskCrontab: this.form.taskCrontab,
             projectId,

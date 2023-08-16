@@ -40,7 +40,6 @@
           </template>
         </el-table-column>
         <el-table-column prop="elapsed" label="运行耗时" width="120px" align="center" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="runEnv" label="运行环境" width="120px" align="center" show-overflow-tooltip></el-table-column>
         <el-table-column prop="runTime" label="运行时间" width="180px" align="center" show-overflow-tooltip></el-table-column>
       </el-table>
       <div class="content-footer clear">
@@ -77,8 +76,8 @@ export default {
       error: "错误",
     };
     this.searchTypeName = nameMap[this.taskInfo.searchType];
-    let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-    this.projectName = curProjectEnv.curProjectName;
+    let curProject = JSON.parse(localStorage.getItem("curProject"));
+    this.projectName = curProject.curProjectName;
     this.getTableData();
   },
   methods: {

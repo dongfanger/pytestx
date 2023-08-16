@@ -20,24 +20,22 @@ export default {
     NavLeft,
   },
   mounted() {
-    this.saveProjectEnv();
+    this.saveProject();
   },
   methods: {
-    saveProjectEnv() {
-      let localProjectEnvList = JSON.parse(localStorage.getItem("projectEnvList"));
-      if (!localProjectEnvList) {
+    saveProject() {
+      let localProjectList = JSON.parse(localStorage.getItem("projectList"));
+      if (!localProjectList) {
         this.$http
-          .get("/tasks/projects/env")
-          .then(({ data: { projectEnvList, curProjectEnv } }) => {
-            if (projectEnvList) {
-              this.projectEnvList = projectEnvList;
-              localStorage.setItem("projectEnvList", JSON.stringify(projectEnvList));
-              let localCurProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-              if (!localCurProjectEnv) {
-                this.curProjectId = curProjectEnv.curProjectId;
-                this.curProjectName = curProjectEnv.curProjectName;
-                this.curEnvName = curProjectEnv.curEnvName;
-                localStorage.setItem("curProjectEnv", JSON.stringify(curProjectEnv));
+          .get("/tasks/projects/cur")
+          .then(({ data: { projectList, curProject } }) => {
+            if (projectList) {
+              localStorage.setItem("projectList", JSON.stringify(projectList));
+              let localCurProject = JSON.parse(localStorage.getItem("curProject"));
+              if (!localCurProject) {
+                this.curProjectId = curProject.curProjectId;
+                this.curProjectName = curProject.curProjectName;
+                localStorage.setItem("curProject", JSON.stringify(curProject));
               }
             }
           })

@@ -39,18 +39,16 @@ class ProjectViewSet(ModelViewSet):
 
 
 @api_view(['GET'])
-def project_env(request, *args, **kwargs):
-    data = {"projectEnvList": [], "curProjectEnv": {}}
+def project_cur(request, *args, **kwargs):
+    data = {"projectList": [], "curProject": {}}
     projects = Project.objects.all()
     if not projects:
         return Response(data, status=status.HTTP_200_OK)
     for project in projects:
-        data["projectEnvList"].append({"projectId": str(project.id),
-                                       "projectName": project.name,
-                                       "envList": project.env_config.replace(" ", "").split(",")})
-    data["curProjectEnv"] = {"curProjectId": str(projects[0].id),
-                             "curProjectName": projects[0].name,
-                             "curEnvName": projects[0].env_config.replace(" ", "").split(",")[0]}
+        data["projectList"].append({"projectId": str(project.id),
+                                    "projectName": project.name})
+    data["curProject"] = {"curProjectId": str(projects[0].id),
+                          "curProjectName": projects[0].name}
     return Response(data, status=status.HTTP_200_OK)
 
 

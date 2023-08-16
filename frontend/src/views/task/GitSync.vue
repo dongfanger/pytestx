@@ -72,7 +72,6 @@ export default {
               return {
                 id: item.id,
                 projectName: item.name,
-                envConfig: item.envConfig,
                 gitRepository: item.gitRepository,
                 gitBranch: item.gitBranch,
                 lastSyncTime: item.lastSyncTime,

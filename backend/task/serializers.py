@@ -16,14 +16,13 @@ from user.models import User
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(required=False)
-    envConfig = serializers.CharField(source="env_config")
     gitRepository = serializers.CharField(source="git_repository", required=False, allow_blank=True)
     gitBranch = serializers.CharField(source="git_branch", required=False, allow_blank=True)
     lastSyncTime = serializers.SerializerMethodField(required=False)
 
     class Meta:
         model = Project
-        fields = ["id", "name", "envConfig", "gitRepository", "gitBranch", "lastSyncTime"]
+        fields = ["id", "name", "gitRepository", "gitBranch", "lastSyncTime"]
 
     def get_lastSyncTime(self, instance):
         return instance.last_sync_time.strftime("%Y-%m-%d %H:%M:%S") if instance.last_sync_time else ""
@@ -49,27 +48,14 @@ class TaskSerializer(serializers.ModelSerializer):
     projectId = serializers.CharField(source="project_id")
     taskStatus = serializers.CharField(source="task_status")
     taskCrontab = serializers.CharField(source="task_crontab", required=False, allow_blank=True)
-    taskRunEnv = serializers.CharField(source="task_run_env", required=False, allow_blank=True)
 
-    runEnv = serializers.SerializerMethodField(required=False)
     runUserNickname = serializers.SerializerMethodField(required=False)
     runTime = serializers.SerializerMethodField(required=False)
 
     class Meta:
         model = Task
-        fields = ["id", "name", "projectId", "taskStatus", "taskCrontab", "taskRunEnv",
-                  "runEnv", "runUserNickname", "runTime"]
-
-    def get_runEnv(self, instance):
-        task_id = instance.id
-        try:
-            task_results = TaskResult.objects.filter(task_id=task_id)
-        except ObjectDoesNotExist:
-            return ""
-        run_env = ""
-        if task_results:
-            run_env = task_results[0].run_env
-        return run_env
+        fields = ["id", "name", "projectId", "taskStatus", "taskCrontab",
+                  "runUserNickname", "runTime"]
 
     def get_runUserNickname(self, instance):
         task_id = instance.id
@@ -122,7 +108,6 @@ class TaskResultSerializer(serializers.ModelSerializer):
     taskId = serializers.CharField(source="task_id")
     caseDesc = serializers.SerializerMethodField(required=False)
     caseCreatorNickname = serializers.SerializerMethodField(required=False)
-    runEnv = serializers.CharField(source="run_env")
     runUserNickname = serializers.SerializerMethodField()
     runTime = serializers.SerializerMethodField()
     reportPath = serializers.CharField(source="report_path")
@@ -130,7 +115,7 @@ class TaskResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskResult
         fields = ["taskId", "caseDesc", "caseCreatorNickname",
-                  "result", "runEnv", "runUserNickname", "runTime", "reportPath"]
+                  "result", "runUserNickname", "runTime", "reportPath"]
 
     def get_caseDesc(self, instance):
         return Case.objects.get(id=instance.case_id).desc

@@ -5,9 +5,6 @@
         <el-form-item label="项目名称" prop="name">
           <el-input v-model="projectForm.name" placeholder="请输入项目名称" class="input-380"></el-input>
         </el-form-item>
-        <el-form-item label="环境配置" prop="envConfig">
-          <el-input v-model="projectForm.envConfig" placeholder="请输入环境英文名（多个环境英文逗号分隔）" class="input-380"></el-input>
-        </el-form-item>
         <el-form-item label="Git仓库" prop="gitRepository">
           <el-input v-model="projectForm.gitRepository" placeholder="请输入代码仓库地址" class="input-380"></el-input>
         </el-form-item>
@@ -58,13 +55,11 @@ export default {
         name: "",
         desc: "",
         leader: "",
-        envConfig: "",
         gitRepository: "",
         gitBranch: "",
       },
       rules: {
         name: [{ required: true, message: "项目名称不能为空", trigger: "blur" }],
-        envConfig: [{ required: true, message: "环境配置不能为空", trigger: "blur" }],
       },
     };
   },
@@ -72,7 +67,6 @@ export default {
     getDetail() {
       this.$http.get(`/tasks/projects/${this.id}`).then(({ data }) => {
         this.projectForm.name = data.name;
-        this.projectForm.envConfig = data.envConfig;
         this.projectForm.gitRepository = data.gitRepository;
         this.projectForm.gitBranch = data.gitBranch;
       });
@@ -81,7 +75,6 @@ export default {
       this.$refs.projectFormRef.resetFields();
       this.isLoading = false;
       this.projectForm.name = "";
-      this.projectForm.env = "";
       this.projectForm.gitRepository = "";
       this.projectForm.gitBranch = "";
       this.$emit("update:dialogFormVisible", false);
@@ -90,7 +83,6 @@ export default {
       this.$refs.projectFormRef.validate(valid => {
         if (valid) {
           this.projectForm.name = this.projectForm.name.trim();
-          this.projectForm.envConfig = this.projectForm.envConfig.trim();
           this.projectForm.gitRepository = this.projectForm.gitRepository.trim();
           this.projectForm.gitBranch = this.projectForm.gitBranch.trim();
           this.isLoading = true;
@@ -99,10 +91,9 @@ export default {
       });
     },
     onRequest() {
-      const { name, envConfig, gitRepository, gitBranch } = this.projectForm;
+      const { name, gitRepository, gitBranch } = this.projectForm;
       let params = {
         name,
-        envConfig,
         gitRepository,
         gitBranch,
       };
@@ -121,7 +112,7 @@ export default {
         })
         .finally(() => {
           this.isLoading = false;
-          localStorage.removeItem("projectEnvList");
+          localStorage.removeItem("projectList");
         });
     },
     logout() {

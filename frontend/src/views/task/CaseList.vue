@@ -123,8 +123,8 @@ export default {
       caseNum: info.caseNum,
       id: info.id,
     };
-    let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-    this.projectName = curProjectEnv.curProjectName;
+    let curProject = JSON.parse(localStorage.getItem("curProject"));
+    this.projectName = curProject.curProjectName;
     this.getTableData();
   },
   methods: {
@@ -213,8 +213,8 @@ export default {
       await this.getCaseData(data.page, data.searchInfo);
     },
     async getCaseData(page, keyword) {
-      let curProjectEnv = JSON.parse(localStorage.getItem("curProjectEnv"));
-      let projectId = curProjectEnv.curProjectId;
+      let curProject = JSON.parse(localStorage.getItem("curProject"));
+      let projectId = curProject.curProjectId;
       let params = {
         page,
         keyword: keyword,

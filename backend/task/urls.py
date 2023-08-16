@@ -29,7 +29,7 @@ urlpatterns = [
         "put": "update",
         "delete": "destroy"
     })),
-    path(r"projects/env", project_view.project_env),  # 项目环境下拉框选项
+    path(r"projects/cur", project_view.project_cur),  # 项目环境下拉框选项
     path(r"projects/<int:pk>/gitSync", project_view.git_sync),
     # ------------------项目结束------------------
 

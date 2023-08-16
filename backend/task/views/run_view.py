@@ -37,21 +37,9 @@ class TaskContext:
         self.case_count = 0
         self.case_num = None
         self.task_id = None
-        self.run_env = ""
         self.run_user_id = None
         self.container_task_path = ""
         self.case_filepath_list = []
-
-
-def write_conf_yaml(project_dir, env_name):
-    # conf.yaml
-    filepath = os.path.join(project_dir, "resources", "tep.yaml")
-    f = open(filepath, "r", encoding="utf-8")
-    conf = yaml.load(f.read(), Loader=yaml.FullLoader)
-    f.close()
-    conf["env"] = env_name
-    with open(filepath, "w", encoding="utf-8") as f:
-        yaml.dump(conf, f)
 
 
 def find_case(cases):
@@ -107,7 +95,6 @@ def save_task_result(pytest_result):
         data = {
             "taskId": task_context.task_id,
             "result": "执行成功",
-            "runEnv": task_context.run_env,
             "runUserId": task_context.run_user_id,
             "reportPath": report_path
         }
@@ -122,7 +109,7 @@ def save_task_result(pytest_result):
             serializer.save()
 
 
-def run_task_engine(project_id, task_id, run_env, run_user_id):
+def run_task_engine(project_id, task_id, run_user_id):
     task_context = TaskContext(project_id)
     container_path = os.path.join(SANDBOX_PATH, task_context.project_name, "container")
     if not os.path.exists(container_path):
@@ -139,7 +126,6 @@ def run_task_engine(project_id, task_id, run_env, run_user_id):
     case_list = Case.objects.filter(Q(id__in=task_case_ids))
     thread_pool = ThreadPoolExecutor()
     task_context.case_num = len(case_list)
-    task_context.run_env = run_env
     task_context.run_user_id = run_user_id
     task_context.task_id = task_id
     for case_to_run in find_case(case_list):
@@ -151,11 +137,10 @@ def run_task_engine(project_id, task_id, run_env, run_user_id):
 @api_view(['POST'])
 def run_task(request, *args, **kwargs):
     task_id = kwargs["task_id"]
-    run_env = request.data.get("runEnv")
     project_id = Task.objects.get(id=task_id).project_id
     request_jwt = request.headers.get("Authorization").replace("Bearer ", "")
     request_jwt_decoded = jwt.decode(request_jwt, verify=False, algorithms=['HS512'])
     run_user_id = request_jwt_decoded["user_id"]
-    run_task_engine(project_id, task_id, run_env, run_user_id)
+    run_task_engine(project_id, task_id, run_user_id)
 
     return Response({"msg": "计划运行成功"}, status=status.HTTP_200_OK)
