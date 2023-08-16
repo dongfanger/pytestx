@@ -120,8 +120,6 @@ def run_task_engine(project_id, task_id, run_user_id):
         os.mkdir(container_task_path)
     task_context.container_task_path = container_task_path
 
-    # todo 激活环境tep.yaml
-
     task_case_ids = [task_case.case_id for task_case in TaskCase.objects.filter(task_id=task_id)]
     case_list = Case.objects.filter(Q(id__in=task_case_ids))
     thread_pool = ThreadPoolExecutor()

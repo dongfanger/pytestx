@@ -2,6 +2,7 @@
 import os
 import time
 
+import jwt
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -64,7 +65,7 @@ def pull():
     GitSyncConfig.project_name = git_pull(repository, branch, SANDBOX_PATH)
 
 
-def save():
+def save(user_id):
     git_files = []
     tests_dir = os.path.join(SANDBOX_PATH, GitSyncConfig.project_name, "tests")
     for root, _, files in os.walk(tests_dir):
@@ -94,7 +95,7 @@ def save():
 
     data = {
         "desc": "desc",
-        "creator_id": 1,  # todo 根据当前登录用户设置
+        "creatorId": user_id,
         "projectId": GitSyncConfig.project_id,
         "filename": "",
         "filepath": ""
@@ -121,9 +122,12 @@ def save():
 def git_sync(request, *args, **kwargs):
     # todo Windows同步项目后，保存的文件路径，在切换到Mac时，不兼容（当前只能手动重新同步）
     project_id = kwargs["pk"]
+    request_jwt = request.headers.get("Authorization").replace("Bearer ", "")
+    request_jwt_decoded = jwt.decode(request_jwt, verify=False, algorithms=['HS512'])
+    user_id = request_jwt_decoded["user_id"]
     GitSyncConfig.project_id = project_id
     pull()
-    save()
+    save(user_id)
     project = Project.objects.get(id=project_id)
     project.last_sync_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     project.save()

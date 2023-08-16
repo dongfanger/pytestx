@@ -31,11 +31,12 @@ class ProjectSerializer(serializers.ModelSerializer):
 class CaseSerializer(serializers.ModelSerializer):
     id = serializers.CharField(required=False)
     creatorNickname = serializers.SerializerMethodField(required=False)
+    creatorId = serializers.CharField(source="creator_id")
     projectId = serializers.CharField(source="project_id")
 
     class Meta:
         model = Case
-        fields = ["id", "desc", "creatorNickname", "projectId", "filename", "filepath"]
+        fields = ["id", "desc", "creatorId", "creatorNickname", "projectId", "filename", "filepath"]
 
     def get_creatorNickname(self, instance):
         creator_id = instance.creator_id
@@ -110,11 +111,12 @@ class TaskResultSerializer(serializers.ModelSerializer):
     caseCreatorNickname = serializers.SerializerMethodField(required=False)
     runUserNickname = serializers.SerializerMethodField()
     runTime = serializers.SerializerMethodField()
+    runUserId = serializers.CharField(source="run_user_id")
     reportPath = serializers.CharField(source="report_path")
 
     class Meta:
         model = TaskResult
-        fields = ["taskId", "caseDesc", "caseCreatorNickname",
+        fields = ["taskId", "caseDesc", "caseCreatorNickname", "runUserId",
                   "result", "runUserNickname", "runTime", "reportPath"]
 
     def get_caseDesc(self, instance):

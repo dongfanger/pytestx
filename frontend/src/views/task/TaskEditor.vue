@@ -138,7 +138,7 @@ export default {
               this.$notifyMessage("修改任务成功", { type: "success" });
             });
           } else {
-            let url = `/tasks`;
+            let url = `/tasks/`;
             this.$http.post(url, param).then(() => {
               this.back();
               this.$notifyMessage("新增任务成功", { type: "success" });
