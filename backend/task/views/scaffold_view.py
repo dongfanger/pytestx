@@ -45,12 +45,11 @@ def copy_folder(source_folder, destination_folder, ignore_folders):
     shutil.copytree(source_folder, destination_folder, ignore=shutil.ignore_patterns(*ignore_folders))
 
 
-def create_scaffold(temp_dir, project_name):
+def create_scaffold(temp_dir,):
+    git_pull(TEP_PROJECT_GIT_URL, "master", settings.SANDBOX_PATH)
     tep_project_name = "tep-project"
     tep_dir = os.path.join(settings.SANDBOX_PATH, tep_project_name)
-    git_pull(TEP_PROJECT_GIT_URL, "master", tep_dir)
     copy_folder(tep_dir, temp_dir, ignore_folders=[".idea", ".pytest_cache", "venv", "__pycache__", ".git"])
-    os.rename(os.path.join(temp_dir, tep_project_name), os.path.join(temp_dir, project_name))
 
 
 @api_view(['POST'])
@@ -61,7 +60,8 @@ def startproject(request, *args, **kwargs):
     export_dir = os.path.join(settings.BASE_DIR, "export")
     temp_name = project_name + "-" + str(uuid.uuid1()).replace("-", "")
     temp_dir = os.path.join(export_dir, temp_name)
-    create_scaffold(temp_dir, project_name)
+    temp_dir_project = os.path.join(temp_dir, project_name)
+    create_scaffold(temp_dir_project)
     zip_filepath = os.path.join(export_dir, f"{temp_name}.zip")
     make_zip(temp_dir, zip_filepath)
     shutil.rmtree(temp_dir)
