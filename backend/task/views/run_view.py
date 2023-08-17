@@ -13,93 +13,96 @@ import time
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import jwt
-import yaml
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from constant.TaskRunType import TaskRunType
+from pytestx import settings
+from pytestx.settings import SANDBOX_PATH
 from task.models import Case, TaskResult, Task, TaskCase
 from task.serializers import TaskResultSerializer
-from pytestx.settings import SANDBOX_PATH
 
 
-class TaskContext:
-    def __init__(self, project_id):
-        if not os.path.exists(SANDBOX_PATH):
-            os.mkdir(SANDBOX_PATH)
-
-        self.project_id = project_id
-        self.project_name = Case.objects.filter(project_id=project_id)[0].filepath.split(os.sep)[0]
-
+class TaskRunner:
+    def __init__(self, task_id, run_user_id):
+        self.task_id = task_id
+        self.project_id = Task.objects.get(id=task_id).project_id
+        self.project_name = Case.objects.filter(project_id=self.project_id)[0].filepath.split(os.sep)[0]
+        self.project_dir = os.path.join(SANDBOX_PATH, self.project_name)
+        self.run_user_id = run_user_id
         self.current_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+        self.report_path = os.path.join(self.project_name, "reports", self.current_time + ".html")
+        task_case_id_list = [task_case.case_id for task_case in TaskCase.objects.filter(task_id=self.task_id)]
+        self.case_list = Case.objects.filter(Q(id__in=task_case_id_list))
+        self.case_num = len(self.case_list)
         self.case_count = 0
-        self.case_num = None
-        self.task_id = None
-        self.run_user_id = None
-        self.container_task_path = ""
+        self.directory_path = os.path.join(SANDBOX_PATH, self.project_name, "directory")
+        self.directory_sub_path = os.path.join(self.directory_path, f"{str(self.task_id)}-{self.current_time}")
         self.case_filepath_list = []
 
+    def run(self):
+        if not os.path.exists(SANDBOX_PATH):
+            os.mkdir(SANDBOX_PATH)
+        self.get_case_from_db()
+        if settings.TASK_RUN_TYPE == TaskRunType.COMMAND:
+            try:
+                self.execute_by_param()
+            except:  # 如果命令行参数添加路径，字符超长报错，降级为复制用例
+                self.execute_by_directory()
+        elif settings.TASK_RUN_TYPE == TaskRunType.DIRECTORY:
+            self.execute_by_directory()
+        elif settings.TASK_RUN_TYPE == TaskRunType.DOCKER:
+            pass
+        self.save_task_result()
 
-def find_case(cases):
-    # 数据库查找用例
-    for case in cases:
-        filepath = case.filepath
-        yield case.id, filepath
+    def get_case_from_db(self):
+        # 数据库查找用例
+        for case in self.case_list:
+            filepath = case.filepath
+            self.case_filepath_list.append(filepath)
 
+    def execute_by_param(self):
+        """命令行拼装路径"""
+        os.chdir(self.project_dir)
+        path_list = [os.sep.join(x.split(os.sep)[1:]) for x in self.case_filepath_list]
+        cmd = f"pytest {' '.join(path_list)} --html={os.path.join(SANDBOX_PATH, self.report_path)} --self-contained-html"
+        subprocess.getoutput(cmd)
 
-def find_files_with_same_name(directory, known_file):
-    known_filename = os.path.basename(known_file)
-    known_file_name_without_extension = os.path.splitext(known_filename)[0]
-    same_name_files = []
+    def execute_by_directory(self):
+        """复制文件到directory目录执行"""
+        if not os.path.exists(self.directory_path):
+            os.mkdir(self.directory_path)
+        if not os.path.exists(self.directory_sub_path):
+            os.mkdir(self.directory_sub_path)
+        thread_pool = ThreadPoolExecutor()  # 多线程复制用例
+        for filepath in self.case_filepath_list:
+            args = (self.copy_case, filepath)
+            thread_pool.submit(*args).add_done_callback(self.directory_run)
 
-    for root, dirs, files in os.walk(directory):
-        for filename in files:
-            if filename != known_filename:
-                file_name = os.path.splitext(filename)[0]
-                if file_name == known_file_name_without_extension:
-                    file_path = os.path.join(root, filename)
-                    same_name_files.append(file_path)
-
-    return same_name_files
-
-
-def pull_case(filepath, task_context):
-    task_context.case_filepath_list.append(filepath)
-    # todo 复制用例只在降级时才做，此处代码需要优化
-    file_path_abs = os.path.join(SANDBOX_PATH, filepath)
-    shutil.copy2(file_path_abs, task_context.container_task_path)
-    same_name_files = find_files_with_same_name(os.path.dirname(file_path_abs), filepath.split(os.sep)[-1])
-    if same_name_files:
-        same_name_file = same_name_files[0]
-        if same_name_file.endswith(".yml") or same_name_file.endswith(".yaml"):
-            shutil.copy2(same_name_file, task_context.container_task_path)
-
-    return task_context
-
-
-def save_task_result(pytest_result):
-    task_context = pytest_result.result()
-    task_context.case_count += 1
-    if task_context.case_count == task_context.case_num:
-        report_path = os.path.join(task_context.project_name, "reports", task_context.current_time + ".html")
-        try:
-            os.chdir(SANDBOX_PATH)
-            cmd = f"pytest {' '.join(task_context.case_filepath_list)} --html={os.path.join(SANDBOX_PATH, report_path)} --self-contained-html"
+    def directory_run(self, *args):
+        """directory执行"""
+        self.case_count += 1
+        if self.case_count == self.case_num:
+            os.chdir(self.directory_sub_path)
+            cmd = f"pytest --html={os.path.join(SANDBOX_PATH, self.report_path)} --self-contained-html"
             subprocess.getoutput(cmd)
-        except:  # 如果命令行参数添加路径，字符超长报错，降级为复制用例（该场景未测试）
-            os.chdir(task_context.container_task_path)
-            cmd = f"pytest --html={os.path.join(SANDBOX_PATH, report_path)} --self-contained-html"
-            subprocess.getoutput(cmd)
+
+    def copy_case(self, filepath):
+        file_path_abs = os.path.join(SANDBOX_PATH, filepath)
+        shutil.copy2(file_path_abs, self.directory_sub_path)
+
+    def save_task_result(self):
         data = {
-            "taskId": task_context.task_id,
+            "taskId": self.task_id,
             "result": "执行成功",
-            "runUserId": task_context.run_user_id,
-            "reportPath": report_path
+            "runUserId": self.run_user_id,
+            "reportPath": self.report_path
         }
         try:
-            instance = TaskResult.objects.get(task_id=task_context.task_id, run_user_id=task_context.run_user_id)
+            instance = TaskResult.objects.get(task_id=self.task_id, run_user_id=self.run_user_id)
             serializer = TaskResultSerializer(data=data, instance=instance)  # 更新
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -109,36 +112,13 @@ def save_task_result(pytest_result):
             serializer.save()
 
 
-def run_task_engine(project_id, task_id, run_user_id):
-    task_context = TaskContext(project_id)
-    container_path = os.path.join(SANDBOX_PATH, task_context.project_name, "container")
-    if not os.path.exists(container_path):
-        os.mkdir(container_path)
-    container_task_path = os.path.join(container_path, f"{str(task_id)}-{task_context.current_time}")
-    os.chdir(SANDBOX_PATH)
-    if not os.path.exists(container_task_path):
-        os.mkdir(container_task_path)
-    task_context.container_task_path = container_task_path
-
-    task_case_ids = [task_case.case_id for task_case in TaskCase.objects.filter(task_id=task_id)]
-    case_list = Case.objects.filter(Q(id__in=task_case_ids))
-    thread_pool = ThreadPoolExecutor()
-    task_context.case_num = len(case_list)
-    task_context.run_user_id = run_user_id
-    task_context.task_id = task_id
-    for case_to_run in find_case(case_list):
-        case_id, filepath = case_to_run
-        args = (pull_case, filepath, task_context)
-        thread_pool.submit(*args).add_done_callback(save_task_result)
-
-
 @api_view(['POST'])
 def run_task(request, *args, **kwargs):
     task_id = kwargs["task_id"]
-    project_id = Task.objects.get(id=task_id).project_id
     request_jwt = request.headers.get("Authorization").replace("Bearer ", "")
     request_jwt_decoded = jwt.decode(request_jwt, verify=False, algorithms=['HS512'])
     run_user_id = request_jwt_decoded["user_id"]
-    run_task_engine(project_id, task_id, run_user_id)
+    task_runner = TaskRunner(task_id, run_user_id)
+    task_runner.run()
 
     return Response({"msg": "计划运行成功"}, status=status.HTTP_200_OK)

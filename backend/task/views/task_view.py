@@ -21,7 +21,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from task.models import Task, TaskCase, Case, TaskResult
 from task.serializers import TaskSerializer, TaskCaseSerializer, TaskResultSerializer, CaseSerializer
-from task.views.run_view import run_task_engine
+from task.views.run_view import TaskRunner
 from task.views.schedule import scheduler
 from pytestx.settings import SANDBOX_PATH
 from user.pagination import CustomPagination
@@ -50,7 +50,8 @@ class TaskViewSet(ModelViewSet):
             if task_status == "1":
                 run_user_nickname = "定时任务"
                 user_id = "task"
-                task_added = scheduler.add_job(func=run_task_engine,
+                task_runner = TaskRunner(task.id, user_id)
+                task_added = scheduler.add_job(func=task_runner.run,
                                                trigger=CronTrigger.from_crontab(task_crontab),
                                                id=str(task.id),
                                                args=[project_id, task.id, run_user_nickname, user_id],
@@ -78,7 +79,8 @@ class TaskViewSet(ModelViewSet):
         if task_status == "1":
             run_user_nickname = "定时任务"
             user_id = "task"
-            task_updated = scheduler.add_job(func=run_task_engine,
+            task_runner = TaskRunner(task.id, user_id)
+            task_updated = scheduler.add_job(func=task_runner.run,
                                              trigger=CronTrigger.from_crontab(task_crontab),
                                              id=str(task_id),
                                              args=[project_id, task_id, run_user_nickname, user_id],

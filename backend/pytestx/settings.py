@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from constant.TaskRunType import TaskRunType
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
@@ -163,3 +165,5 @@ MENU_AUTH = {
 SANDBOX_PATH = os.path.join(BASE_DIR, "task", "sandbox")
 
 TEP_PROJECT_GIT_URL = "https://gitee.com/dongfanger/tep-project.git"
+
+TASK_RUN_TYPE = TaskRunType.COMMAND
