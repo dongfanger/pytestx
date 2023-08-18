@@ -42,5 +42,3 @@ Docker：
     配置 修改frontend/deploy/nginx.conf的proxy_pass为宿主机IP地址
   
     运行 docker run -p 8080:80 frontend
-
-https://gitee.com/dongfanger/pytestx
