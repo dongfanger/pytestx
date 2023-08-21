@@ -176,7 +176,7 @@ MENU_AUTH = {
     "开发": [{"id": "task", "name": "任务调度", "access": True}, {"id": "console", "name": "后台管理", "access": False}]
 }
 
-SANDBOX_PATH = os.path.join(BASE_DIR, "task", "sandbox")
+SANDBOX_PATH = os.path.join(os.path.dirname(BASE_DIR), "sandbox.local")
 
 TEP_PROJECT_GIT_URL = "https://gitee.com/dongfanger/tep-project.git"
 
