@@ -88,10 +88,10 @@ def save(user_id):
 
     for _, filepath in to_delete_cases:
         case = Case.objects.get(project_id=project_id, filepath=filepath)
-        case.delete()
         task_case_list = TaskCase.objects.filter(case_id=case.id)  # 同时删除所有任务关联的用例
         for task_case in task_case_list:
             task_case.delete()
+        case.delete()
 
     data = {
         "desc": "desc",
