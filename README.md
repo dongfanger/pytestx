@@ -22,23 +22,26 @@ TODO：
 - [x] 优先命令行参数拼接路径执行，超长则降级为用例复制
 - [x] docker镜像
 
-Docker：
+一键部署
 
-在pytestx根目录执行以下命令
+在pytestx根目录执行命令
 
 - 后端：
   
-    打包 docker build -f ./backend/deploy/Dockerfile -t backend ./backend
+    chmod +x ./deploy/backend.sh
     
-    运行 docker run -p 8000:80 backend
+    ./deploy/backend.sh
   
 
-- 前端：
+- 前端： 
+  
+    修改deploy/nginx.conf的proxy_pass为宿主机IP地址
+  
+    chmod +x ./deploy/frontend.sh
+
+    ./deploy/frontend.sh
+
+
+- pytest：
     
-    编译 docker run --rm -v $(pwd)/frontend/:/data/src  -w /data/src/ node:latest  /bin/sh -c "npm install && npm run build"
-   
-    打包 docker build -f ./frontend/deploy/Dockerfile -t frontend ./frontend
-  
-    配置 修改frontend/deploy/nginx.conf的proxy_pass为宿主机IP地址
-  
-    运行 docker run -p 8080:80 frontend
+    基础镜像 

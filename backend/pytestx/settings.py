@@ -156,6 +156,20 @@ CORS_ORIGIN_WHITELIST = ()
 
 # ---------------- 跨域访问配置结束 ---------------------
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
 MENU_AUTH = {
     "管理员": [{"id": "task", "name": "任务调度", "access": True}, {"id": "console", "name": "后台管理", "access": True}],
     "测试": [{"id": "task", "name": "任务调度", "access": True}, {"id": "console", "name": "后台管理", "access": False}],
