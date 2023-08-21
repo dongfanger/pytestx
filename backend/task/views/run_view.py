@@ -50,12 +50,10 @@ class TaskRunner:
         if settings.TASK_RUN_TYPE == TaskRunType.COMMAND:
             try:
                 self.execute_by_param()
-            except:  # 如果命令行参数添加路径，字符超长报错，降级为复制用例
+            except:  # 如果命令行参数添加路径，字符超长报错，降级为复制文件到目录，按目录执行
                 self.execute_by_directory()
         elif settings.TASK_RUN_TYPE == TaskRunType.DIRECTORY:
             self.execute_by_directory()
-        elif settings.TASK_RUN_TYPE == TaskRunType.DOCKER:
-            pass
         self.save_task_result()
 
     def get_case_from_db(self):

@@ -1,8 +1,8 @@
 #!/bin/bash
 PkgName='frontend'
 
-Dockerfile='./Dockerfile.frontend'
-DockerContext=../
+Dockerfile='./deploy/Dockerfile.frontend'
+DockerContext=./
 
 BUILDER_IMAGE='node:latest'
 echo "Start compiling code..."
@@ -15,8 +15,8 @@ docker build -f $Dockerfile -t $PkgName $DockerContext
 if [ $? -eq 0 ]
 then
     echo "Build docker image success"
+    echo "Start run image..."
+    docker run -p 8080:80 $PkgName
 else
     echo "Build docker image failed"
 fi
-echo "Start run image..."
-docker run -p 8080:80 $PkgName
