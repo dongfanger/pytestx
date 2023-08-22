@@ -3,3 +3,4 @@ django-cors-headers==3.6.0
 djangorestframework==3.12.2
 djangorestframework-jwt==1.11.0
 django-apscheduler==0.5.2
+loguru~=0.7.0

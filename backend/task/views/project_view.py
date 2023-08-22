@@ -4,6 +4,7 @@ import time
 
 import jwt
 from django.core.exceptions import ObjectDoesNotExist
+from loguru import logger
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser
@@ -118,6 +119,17 @@ def save(user_id):
         serializer.save()
 
 
+def sync(project_id, user_id):
+    logger.info("同步项目")
+    GitSyncConfig.project_id = project_id
+    pull()
+    save(user_id)
+    project = Project.objects.get(id=project_id)
+    project.last_sync_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    project.save()
+    return project.last_sync_time
+
+
 @api_view(['POST'])
 def git_sync(request, *args, **kwargs):
     # todo Windows同步项目后，保存的文件路径，在切换到Mac时，不兼容（当前只能手动重新同步）
@@ -125,10 +137,5 @@ def git_sync(request, *args, **kwargs):
     request_jwt = request.headers.get("Authorization").replace("Bearer ", "")
     request_jwt_decoded = jwt.decode(request_jwt, verify=False, algorithms=['HS512'])
     user_id = request_jwt_decoded["user_id"]
-    GitSyncConfig.project_id = project_id
-    pull()
-    save(user_id)
-    project = Project.objects.get(id=project_id)
-    project.last_sync_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-    project.save()
-    return Response({"msg": "同步成功", "lastSyncTime": project.last_sync_time}, status=status.HTTP_200_OK)
+    last_sync_time = sync(project_id, user_id)
+    return Response({"msg": "同步成功", "lastSyncTime": last_sync_time}, status=status.HTTP_200_OK)

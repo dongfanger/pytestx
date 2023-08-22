@@ -15,15 +15,15 @@ from concurrent.futures.thread import ThreadPoolExecutor
 import jwt
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from loguru import logger
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from constant.TaskRunType import TaskRunType
-from pytestx import settings
 from pytestx.settings import SANDBOX_PATH
 from task.models import Case, TaskResult, Task, TaskCase
 from task.serializers import TaskResultSerializer
+from task.views.project_view import sync
 
 
 class TaskRunner:
@@ -44,15 +44,16 @@ class TaskRunner:
         self.case_filepath_list = []
 
     def run(self):
+        logger.info("任务开始执行")
+        sync(self.project_id, self.run_user_id)  # 执行前先同步一次项目
         if not os.path.exists(SANDBOX_PATH):
             os.mkdir(SANDBOX_PATH)
         self.get_case_from_db()
-        if settings.TASK_RUN_TYPE == TaskRunType.COMMAND:
-            try:
-                self.execute_by_param()
-            except:  # 如果命令行参数添加路径，字符超长报错，降级为复制文件到目录，按目录执行
-                self.execute_by_directory()
-        elif settings.TASK_RUN_TYPE == TaskRunType.DIRECTORY:
+        try:
+            self.execute_by_param()
+        except Exception as e:  # 如果命令行参数添加路径，字符超长报错
+            logger.info("命令行执行异常，降级为复制文件到目录，按目录执行")
+            logger.info(e)
             self.execute_by_directory()
         self.save_task_result()
 
@@ -67,7 +68,8 @@ class TaskRunner:
         os.chdir(self.project_dir)
         path_list = [os.sep.join(x.split(os.sep)[1:]) for x in self.case_filepath_list]
         cmd = f"pytest {' '.join(path_list)} --html={os.path.join(SANDBOX_PATH, self.report_path)} --self-contained-html"
-        subprocess.getoutput(cmd)
+        output = subprocess.getoutput(cmd)
+        logger.info(output)
 
     def execute_by_directory(self):
         """复制文件到directory目录执行"""
@@ -119,4 +121,4 @@ def run_task(request, *args, **kwargs):
     task_runner = TaskRunner(task_id, run_user_id)
     task_runner.run()
 
-    return Response({"msg": "计划运行成功"}, status=status.HTTP_200_OK)
+    return Response({"msg": "任务运行成功"}, status=status.HTTP_200_OK)

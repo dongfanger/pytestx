@@ -3,3 +3,4 @@ __pycache__/
 projects/
 export/
 .pytest_cache
+sandbox.local
