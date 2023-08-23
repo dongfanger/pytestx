@@ -2,19 +2,19 @@ FROM python:3.8
 
 ENV LANG C.UTF-8
 ENV TZ=Asia/Shanghai
-ARG TESTS
+ARG CMD_GIT_CLONE
+ARG GIT_NAME
+ARG EXEC_DIR
+ARG REPORT_NAME
 
 RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
 
 WORKDIR /app
-COPY $TESTS .
-COPY ./fixtures .
-COPY ./resources .
-COPY ./conftest.py .
-COPY ./pytest.ini .
-COPY ./requirements.txt .
-RUN pip install -r ./requirements.txt -i \
+RUN $CMD_GIT_CLONE
+RUN pip install -r ./$GIT_NAME/requirements.txt -i \
     https://pypi.tuna.tsinghua.edu.cn/simple \
     --default-timeout=3000
-CMD ["git", "clone", "https://gitee.com/dongfanger/tep-project.git"]
-CMD ["pytest", "./tests"]
+
+WORKDIR $EXEC_DIR
+ENV HTML_NAME=$REPORT_NAME
+CMD ["pytest", "--html=./reports/$HTML_NAME", "--self-contained-html"]

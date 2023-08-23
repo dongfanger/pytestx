@@ -181,6 +181,6 @@ DEPLOY_PATH = os.path.join(os.path.dirname(BASE_DIR), "deploy")
 
 TEP_PROJECT_GIT_URL = "https://gitee.com/dongfanger/tep-project.git"
 
-TASK_RUN_MODE = TaskRunMode.LOCAL
+TASK_RUN_MODE = TaskRunMode.DOCKER
 LOCAL_PATH = os.path.join(BASE_DIR, ".local")
 REPORT_PATH = os.path.join(BASE_DIR, "task", "report")

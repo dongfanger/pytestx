@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from pytestx import settings
-from pytestx.settings import LOCAL_PATH, DEPLOY_PATH, REPORT_PATH
+from pytestx.settings import LOCAL_PATH, DEPLOY_PATH, REPORT_PATH, BASE_DIR
 from task.constant.TaskRunMode import TaskRunMode
 from task.exception.TaskException import TaskException
 from task.models import Task, Project
@@ -41,11 +41,12 @@ class TaskRunner:
         self.report_name = f"{str(self.git_name)}-{self.task_id}-{self.run_user_id}-{self.current_time}.html"
         self.project_report_path = os.path.join(self.local_path, self.git_name, "reports", self.report_name)
         self.dockerfile_pytest = os.path.join(DEPLOY_PATH, "Dockerfile.pytest")
-        self.cmd_list = []
+        self.exec_dir = os.path.join(self.git_name, self.directory)
+        self.cmd_git_clone = f"git clone -b {self.git_branch} {self.git_repository}"
+        self.cmd_pytest = f"pytest {self.exec_dir} --html={self.project_report_path} --self-contained-html"
 
     def run(self):
         logger.info("任务开始执行")
-        self.get_pytest_cmd_list()
         if settings.TASK_RUN_MODE == TaskRunMode.DOCKER:  # 容器模式
             try:
                 self.execute_by_docker()
@@ -62,7 +63,8 @@ class TaskRunner:
         logger.info("运行模式：本地")
         os.makedirs(self.local_path, exist_ok=True)
         os.chdir(self.local_path)
-        for cmd in self.cmd_list:
+        cmd_list = [self.cmd_git_clone, self.cmd_pytest]
+        for cmd in cmd_list:
             logger.info(cmd)
             output = subprocess.getoutput(cmd)
             if output:
@@ -77,18 +79,17 @@ class TaskRunner:
         logger.info(output)
         if "command not found" in output:
             raise TaskException.DockerNotSupportedException
-        # 复制文件到container目录，多线程，构建pytest镜像，运行
-        self.pytest_container()
-
-    def get_pytest_cmd_list(self):
-        self.cmd_list = [
-            f"git clone -b {self.git_branch} {self.git_repository}",
-            f"pytest {os.path.join(self.git_name, self.directory)} --html={self.project_report_path} --self-contained-html"
+        build_args = [
+            f'--build-arg CMD_GIT_CLONE="{self.cmd_git_clone}"',
+            f'--build-arg GIT_NAME="{self.git_name}"',
+            f'--build-arg EXEC_DIR="{self.exec_dir}"',
+            f'--build-arg REPORT_NAME="{self.report_name}"',
         ]
-
-    def container(self, *args):
-        """构建镜像，运行"""
-        cmd = f"docker build --build-arg TESTS={self.container_tests_path} -f {self.dockerfile_pytest} -t {self.container_name} {self.project_dir}"
+        cmd = f"docker build {' '.join(build_args)} -f {self.dockerfile_pytest} -t {self.git_name} {BASE_DIR}"
+        logger.info(cmd)
+        output = subprocess.getoutput(cmd)
+        logger.info(output)
+        cmd = f"docker run -v {REPORT_PATH}:/app/{os.path.join(self.exec_dir, 'reports')} {self.git_name}"
         logger.info(cmd)
         output = subprocess.getoutput(cmd)
         logger.info(output)
@@ -102,7 +103,7 @@ class TaskRunner:
         }
         logger.info(data)
         instance = Task.objects.get(id=self.task_id)
-        serializer = TaskUpdateResultSerializer(data=data, instance=instance)  # 更新
+        serializer = TaskUpdateResultSerializer(data=data, instance=instance)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
