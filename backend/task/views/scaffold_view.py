@@ -16,7 +16,7 @@ from django.http import StreamingHttpResponse
 from rest_framework.decorators import api_view
 
 from pytestx import settings
-from pytestx.settings import TEP_PROJECT_GIT_URL
+from pytestx.settings import TEP_PROJECT_GIT_URL, EXPORT_PATH
 from task.utils.git_util import git_pull
 
 
@@ -46,9 +46,10 @@ def copy_folder(source_folder, destination_folder, ignore_folders):
 
 
 def create_scaffold(temp_dir,):
-    git_pull(TEP_PROJECT_GIT_URL, "master", settings.SANDBOX_PATH)
+    scaffold_path = os.path.join(EXPORT_PATH, "scaffold")
+    git_pull(TEP_PROJECT_GIT_URL, "master", scaffold_path)
     tep_project_name = "tep-project"
-    tep_dir = os.path.join(settings.SANDBOX_PATH, tep_project_name)
+    tep_dir = os.path.join(scaffold_path, tep_project_name)
     copy_folder(tep_dir, temp_dir, ignore_folders=[".idea", ".pytest_cache", "venv", "__pycache__", ".git"])
 
 
@@ -57,12 +58,11 @@ def startproject(request, *args, **kwargs):
     project_name = request.data.get("projectName")
     if not project_name:
         project_name = "new-project"
-    export_dir = os.path.join(settings.BASE_DIR, "export")
     temp_name = project_name + "-" + str(uuid.uuid1()).replace("-", "")
-    temp_dir = os.path.join(export_dir, temp_name)
+    temp_dir = os.path.join(EXPORT_PATH, temp_name)
     temp_dir_project = os.path.join(temp_dir, project_name)
     create_scaffold(temp_dir_project)
-    zip_filepath = os.path.join(export_dir, f"{temp_name}.zip")
+    zip_filepath = os.path.join(EXPORT_PATH, f"{temp_name}.zip")
     make_zip(temp_dir, zip_filepath)
     shutil.rmtree(temp_dir)
 

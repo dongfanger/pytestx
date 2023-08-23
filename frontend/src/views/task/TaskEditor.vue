@@ -10,7 +10,7 @@
         <el-input v-model="form.name" placeholder="请输入任务名称"></el-input>
       </el-form-item>
       <el-form-item class="custom-size" prop="directory" label="执行目录">
-        <el-input v-model="form.directory" placeholder="请输入执行目录，相对路径，如tests/regression"></el-input>
+        <el-input v-model="form.directory" placeholder="请输入执行目录，相对路径，如tests/base"></el-input>
       </el-form-item>
       <el-form-item class="custom-size" prop="isRegular" label="定时任务">
         <el-switch :active-text="taskText" active-value="1" active-color="rgb(22,140,0)" inactive-value="0"
@@ -128,7 +128,6 @@ export default {
           this.saving = true;
           this.form.name = this.form.name.trim();
           this.form.directory = this.form.directory.trim();
-          this.form.taskCrontab = this.form.taskCrontab.trim();
           let curProject = JSON.parse(localStorage.getItem("curProject"));
           let projectId = curProject.curProjectId;
           let param = {

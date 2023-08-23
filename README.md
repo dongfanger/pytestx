@@ -40,8 +40,3 @@ TODO：
     chmod +x ./deploy/frontend.sh
 
     ./deploy/frontend.sh
-
-
-- pytest：
-    
-    基础镜像 

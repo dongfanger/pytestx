@@ -42,3 +42,9 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_runTime(self, instance):
         return instance.run_time.strftime("%Y-%m-%d %H:%M:%S") if instance.run_time else ""
+
+
+class TaskUpdateResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ["id", "status", "run_time", "run_user_id", "report_path"]

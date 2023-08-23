@@ -1,3 +1,3 @@
 class TaskRunMode:
-    COMMAND = 0  # 命令行
+    LOCAL = 0  # 本地
     DOCKER = 1  # 容器

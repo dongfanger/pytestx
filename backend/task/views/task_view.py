@@ -17,7 +17,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from pytestx.settings import SANDBOX_PATH
+from pytestx.settings import REPORT_PATH
 from task.models import Task
 from task.serializers import TaskSerializer
 from task.views.run_view import TaskRunner
@@ -132,11 +132,10 @@ class TaskViewSet(ModelViewSet):
 
 def report(request, *args, **kwargs):
     task_id = kwargs["task_id"]
-    user_id = kwargs["user_id"]
-    task = Task.objects.filter(task_id=task_id, run_user_id=user_id).order_by('-run_time')[0]
+    task = Task.objects.get(id=task_id)
     report_path = task.report_path
 
-    with open(os.path.join(SANDBOX_PATH, report_path), 'r', encoding="utf8") as f:
+    with open(os.path.join(REPORT_PATH, report_path), 'r', encoding="utf8") as f:
         html_content = f.read()
 
     return HttpResponse(html_content, content_type='text/html')
