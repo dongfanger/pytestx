@@ -77,7 +77,7 @@ class TaskRunner:
         logger.info("运行模式：容器")
         output = subprocess.getoutput("docker -v")
         logger.info(output)
-        if "command not found" in output:
+        if "not found" in output:
             raise TaskException.DockerNotSupportedException
         build_args = [
             f'--build-arg CMD_GIT_CLONE="{self.cmd_git_clone}"',
