@@ -11,10 +11,6 @@
         <el-button type="primary" icon="el-icon-plus" @click="addTask">
           新增任务
         </el-button>
-        <el-button type="text" @click="gitSync" style="margin-left: 30px">
-          <i :class="['el-icon-refresh', { 'spin': isRefreshing }]"></i> 同步项目
-        </el-button>
-        <span style="font-size: small; margin-left: 10px">上次同步时间：{{ lastSyncTime }}</span>
       </div>
       <div style="clear: both" class="content-info" :loading="tableLoading">
         <div class="content-header">
@@ -41,6 +37,7 @@
           }" :data="tableData" style="width: 100%">
             <el-table-column prop="id" label="任务ID" width="80px" align="center" show-overflow-tooltip></el-table-column>
             <el-table-column label="任务名称" prop="name" show-overflow-tooltip></el-table-column>
+            <el-table-column label="执行目录" prop="directory" show-overflow-tooltip></el-table-column>
             <el-table-column prop="report" label="报告" width="180px" align="center"
                              show-overflow-tooltip>
               <template slot-scope="scope">
@@ -49,15 +46,13 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="runUserNickname" label="运行人" width="180px" align="center"
+            <el-table-column prop="runUserNickname" label="运行人员" width="180px" align="center"
                              show-overflow-tooltip></el-table-column>
             <el-table-column prop="runTime" label="运行时间" width="180px" align="center"
                              show-overflow-tooltip></el-table-column>
             <el-table-column label="操作" width="230px">
               <template slot-scope="scope">
                 <div>
-                  <el-button type="primary" icon="el-icon-tickets" size="mini" @click="gotoCaseList(scope.row)"
-                             plain></el-button>
                   <el-button type="success" icon="el-icon-video-play" size="mini" plain
                              @click="runTask(scope.row)" :loading="scope.row.loading"></el-button>
                   <el-button type="primary" icon="el-icon-edit-outline" size="mini" @click="gotoTaskEditor(scope.row)"
@@ -95,7 +90,6 @@ export default {
       total: 0,
       tableData: [],
       tableLoading: false,
-      lastSyncTime: "无",
       isRefreshing: false
     };
   },
@@ -112,7 +106,6 @@ export default {
       });
       let curProject = JSON.parse(localStorage.getItem("curProject"));
       let projectId = curProject.curProjectId;
-      this.getLastSyncTime(projectId);
       if (projectId) {
         params.push(`projectId=${projectId}`);
       }
@@ -129,19 +122,6 @@ export default {
 
       this.tableLoading = false;
     },
-    getLastSyncTime(projectId) {
-      this.$http
-        .get("/tasks/projects")
-        .then(({data: {items}}) => {
-          if (items) {
-            items.map(item => {
-              if (item.id === projectId) {
-                this.lastSyncTime = item.lastSyncTime;
-              }
-            });
-          }
-        })
-    },
     addTask() {
       if (!isProjectExisted()) {
         this.$notifyMessage(`请先创建项目`, {type: "error"});
@@ -151,23 +131,6 @@ export default {
       this.$router.push({
         name: "addTask",
       });
-    },
-    gitSync() {
-      this.isRefreshing = true;
-      let $url;
-      let $method;
-      let curProject = JSON.parse(localStorage.getItem("curProject"));
-      let curProjectId = curProject.curProjectId;
-      $url = `/tasks/projects/${curProjectId}/gitSync`;
-      $method = "post";
-      this.$http[$method]($url)
-        .then(({data}) => {
-          this.$notifyMessage(`同步成功`, {type: "success"});
-          this.lastSyncTime = data.lastSyncTime;
-        })
-        .finally(() => {
-          this.isRefreshing = false;
-        });
     },
     search() {
       this.searchForm.page = 1;
@@ -235,13 +198,6 @@ export default {
       localStorage.setItem("taskInfo", rowInfo);
       this.$router.push({
         name: "editTask",
-      });
-    },
-    gotoCaseList(row) {
-      let rowInfo = JSON.stringify(row);
-      localStorage.setItem("taskInfo", rowInfo);
-      this.$router.push({
-        name: "caseList",
       });
     },
   },

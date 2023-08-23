@@ -8,23 +8,20 @@
 """
 import os.path
 
-import jwt
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.triggers.cron import CronTrigger
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from task.models import Task, TaskCase, Case, TaskResult
-from task.serializers import TaskSerializer, TaskCaseSerializer, TaskResultSerializer, CaseSerializer
+from pytestx.settings import SANDBOX_PATH
+from task.models import Task
+from task.serializers import TaskSerializer
 from task.views.run_view import TaskRunner
 from task.views.schedule import scheduler
-from pytestx.settings import SANDBOX_PATH
-from user.pagination import CustomPagination
 
 
 class TaskViewSet(ModelViewSet):
@@ -44,10 +41,10 @@ class TaskViewSet(ModelViewSet):
 
             task = Task.objects.get(name=request.data.get("name"))
             project_id = request.data.get("projectId")
-            task_status = request.data.get("taskStatus")
+            is_regular = request.data.get("isRegular")
             task_crontab = request.data.get("taskCrontab")
             task_added = ""
-            if task_status == "1":
+            if is_regular == "1":
                 run_user_nickname = "定时任务"
                 user_id = "task"
                 task_runner = TaskRunner(task.id, user_id)
@@ -72,11 +69,11 @@ class TaskViewSet(ModelViewSet):
             pass
 
         project_id = request.data.get("projectId")
-        task_status = request.data.get("taskStatus")
+        is_regular = request.data.get("isRegular")
         task_crontab = request.data.get("taskCrontab")
         task_updated = ""
 
-        if task_status == "1":
+        if is_regular == "1":
             run_user_nickname = "定时任务"
             user_id = "task"
             task_runner = TaskRunner(task.id, user_id)
@@ -86,7 +83,7 @@ class TaskViewSet(ModelViewSet):
                                              args=[project_id, task_id, run_user_nickname, user_id],
                                              max_instances=1,
                                              replace_existing=True)
-        if task_status == "0":
+        if is_regular == "0":
             try:
                 task_updated = scheduler.remove_job(str(task_id))
             except JobLookupError:
@@ -124,128 +121,20 @@ class TaskViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         task_id = kwargs["pk"]
-        task_case = TaskCase.objects.filter(task_id=task_id)
-        if task_case:
-            return Response({"msg": "请先删除关联测试用例"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        else:
-            try:
-                scheduler.remove_job(str(task_id))
-            except JobLookupError:
-                pass
-            instance = self.get_object()
-            self.perform_destroy(instance)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class TaskCaseView(ModelViewSet):
-    queryset = TaskCase.objects.all()
-    serializer_class = TaskCaseSerializer
-
-    def list(self, request, *args, **kwargs):
-        task_id = kwargs["task_id"]
-        query = Q(task_id=task_id)
-        keyword = request.GET.get("keyword")
-        if keyword:
-            try:
-                int(keyword)
-                case_id_query = Q(case_id=keyword)
-            except ValueError:
-                case_id_query = Q()
-            case_desc_query = Q(case_id__in=[case.id for case in Case.objects.filter(Q(desc__icontains=keyword))])
-            query &= (case_id_query | case_desc_query)
-        queryset = TaskCase.objects.filter(query).order_by("-case_id")
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def add(self, request, *args, **kwargs):
-        task_id = kwargs["task_id"]
-        case_ids = request.data.get("caseIds")
-        for case_id in case_ids:
-            try:
-                TaskCase.objects.get(task_id=task_id, case_id=case_id)
-            except ObjectDoesNotExist:
-                data = {
-                    "taskId": task_id,
-                    "caseId": case_id
-                }
-                serializer = TaskCaseSerializer(data=data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-        return Response({"caseIds": case_ids}, status=status.HTTP_201_CREATED)
-
-    def remove(self, request, *args, **kwargs):
-        task_id = kwargs["task_id"]
-        case_id = kwargs["case_id"]
-        task_case = TaskCase.objects.get(task_id=task_id, case_id=case_id)
-        task_case.delete()
+        try:
+            scheduler.remove_job(str(task_id))
+        except JobLookupError:
+            pass
+        instance = self.get_object()
+        self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['GET'])
-def cases(request, *args, **kwargs):
-    project_id = request.GET.get("projectId")
-    case_list = Case.objects.filter(project_id=project_id)
-    cp = CustomPagination()
-    page = cp.paginate_queryset(case_list, request=request)
-    if page is not None:
-        serializer = CaseSerializer(page, many=True)
-        return cp.get_paginated_response(serializer.data)
-
-
-@api_view(['GET'])
-def result(request, *args, **kwargs):
-    search_type = request.GET.get("searchType")
-    task_id = kwargs["task_id"]
-    query = Q(task_id=task_id)
-    if search_type == "passed":
-        query &= Q(result__icontains="passed")
-        query &= ~Q(result__icontains="failed")
-        query &= ~Q(result__icontains="error")
-    elif search_type == "failed":
-        query &= Q(result__icontains="failed")
-        query &= ~Q(result__icontains="error")
-    elif search_type == "error":
-        query &= Q(result__icontains="error")
-    task_result = TaskResult.objects.filter(query)
-    cp = CustomPagination()
-    page = cp.paginate_queryset(task_result, request=request)
-    if page is not None:
-        serializer = TaskResultSerializer(page, many=True)
-        return cp.get_paginated_response(serializer.data)
-
-
-@api_view(['GET'])
-def case_result(request, *args, **kwargs):
-    task_id = kwargs["task_id"]
-    case_id = kwargs["case_id"]
-    case = Case.objects.get(id=case_id)
-    task_result = TaskResult.objects.filter(task_id=task_id, case_id=case_id).order_by('-run_time')
-    task_result = task_result[0]
-    data = {
-        "taskId": task_id,
-        "caseId": case_id,
-        "caseDesc": case.desc,
-        "caseCreatorNickname": case.creator_nickname,
-        "result": task_result.result,
-        "elapsed": task_result.elapsed,
-        "output": task_result.output,
-        "runUserNickname": task_result.run_user_nickname,
-        "runTime": task_result.run_time.strftime("%Y-%m-%d %H:%M:%S")
-    }
-    return Response(data, status=status.HTTP_200_OK)
 
 
 def report(request, *args, **kwargs):
     task_id = kwargs["task_id"]
     user_id = kwargs["user_id"]
-    task_result = TaskResult.objects.filter(task_id=task_id, run_user_id=user_id).order_by('-run_time')[0]
-    report_path = task_result.report_path
+    task = Task.objects.filter(task_id=task_id, run_user_id=user_id).order_by('-run_time')[0]
+    report_path = task.report_path
 
     with open(os.path.join(SANDBOX_PATH, report_path), 'r', encoding="utf8") as f:
         html_content = f.read()

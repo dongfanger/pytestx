@@ -1,0 +1,13 @@
+[
+  {
+    "model": "task.Project",
+    "pk": 1,
+    "fields": {
+      "name": "默认项目",
+      "git_repository": "https://gitee.com/dongfanger/tep-project.git",
+      "git_branch": "master",
+      "created_at": "2023-06-27 08:49:49.355886",
+      "updated_at": "2023-07-20 08:32:08.757259"
+    }
+  }
+]

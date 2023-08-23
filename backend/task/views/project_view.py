@@ -1,20 +1,14 @@
 # Create your views here.
-import os
-import time
 
-import jwt
 from django.core.exceptions import ObjectDoesNotExist
-from loguru import logger
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from pytestx.settings import SANDBOX_PATH
-from task.models import Project, Case, TaskCase
-from task.serializers import ProjectSerializer, CaseSerializer
-from task.utils.git_util import git_pull
+from task.models import Project
+from task.serializers import ProjectSerializer
 
 
 class ProjectViewSet(ModelViewSet):
@@ -52,90 +46,3 @@ def project_cur(request, *args, **kwargs):
     data["curProject"] = {"curProjectId": str(projects[0].id),
                           "curProjectName": projects[0].name}
     return Response(data, status=status.HTTP_200_OK)
-
-
-class GitSyncConfig:
-    project_id = ""
-    project_name = ""
-
-
-def pull():
-    project = Project.objects.get(id=GitSyncConfig.project_id)
-    repository = project.git_repository
-    branch = project.git_branch
-    GitSyncConfig.project_name = git_pull(repository, branch, SANDBOX_PATH)
-
-
-def save(user_id):
-    git_files = []
-    tests_dir = os.path.join(SANDBOX_PATH, GitSyncConfig.project_name, "tests")
-    for root, _, files in os.walk(tests_dir):
-        for file in files:
-            abs_path = os.path.join(root, file)
-            if os.path.isfile(abs_path):
-                if (file.startswith("test_") or file.endswith("_test")) and file.endswith(".py"):
-                    filename = abs_path.replace(tests_dir, "").strip(os.sep)
-                    filepath = abs_path.replace(SANDBOX_PATH, "").strip(os.sep)
-                    git_files.append((filename, filepath))
-    git_files = set(git_files)
-
-    project_id = GitSyncConfig.project_id
-    cases = Case.objects.filter(project_id=project_id)
-    db_files = set((case.filename, case.filepath) for case in cases)
-
-    to_delete_cases = db_files - git_files
-    to_add_cases = git_files - db_files
-    to_update_cases = git_files & db_files
-
-    for _, filepath in to_delete_cases:
-        case = Case.objects.get(project_id=project_id, filepath=filepath)
-        task_case_list = TaskCase.objects.filter(case_id=case.id)  # 同时删除所有任务关联的用例
-        for task_case in task_case_list:
-            task_case.delete()
-        case.delete()
-
-    data = {
-        "desc": "desc",
-        "creatorId": user_id,
-        "projectId": GitSyncConfig.project_id,
-        "filename": "",
-        "filepath": ""
-    }
-    for filename, filepath in to_add_cases:
-        data["desc"] = filename
-        data["filename"] = filename
-        data["filepath"] = filepath
-        serializer = CaseSerializer(data=data)
-        serializer.is_valid()
-        serializer.save()
-
-    for filename, filepath in to_update_cases:
-        data["desc"] = filename
-        data["filename"] = filename
-        data["filepath"] = filepath
-        case = Case.objects.get(project_id=project_id, filepath=filepath)
-        serializer = CaseSerializer(instance=case, data=data)
-        serializer.is_valid()
-        serializer.save()
-
-
-def sync(project_id, user_id):
-    logger.info("同步项目")
-    GitSyncConfig.project_id = project_id
-    pull()
-    save(user_id)
-    project = Project.objects.get(id=project_id)
-    project.last_sync_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-    project.save()
-    return project.last_sync_time
-
-
-@api_view(['POST'])
-def git_sync(request, *args, **kwargs):
-    # todo Windows同步项目后，保存的文件路径，在切换到Mac时，不兼容（当前只能手动重新同步）
-    project_id = kwargs["pk"]
-    request_jwt = request.headers.get("Authorization").replace("Bearer ", "")
-    request_jwt_decoded = jwt.decode(request_jwt, verify=False, algorithms=['HS512'])
-    user_id = request_jwt_decoded["user_id"]
-    last_sync_time = sync(project_id, user_id)
-    return Response({"msg": "同步成功", "lastSyncTime": last_sync_time}, status=status.HTTP_200_OK)

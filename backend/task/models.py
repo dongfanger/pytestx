@@ -18,44 +18,18 @@ class Project(BaseTable):
     name = models.CharField("项目名称", unique=True, max_length=100, null=False)
     git_repository = models.CharField("Git仓库", max_length=100, null=True, blank=True)
     git_branch = models.CharField("Git分支", max_length=100, null=True, blank=True)
-    last_sync_time = models.DateTimeField("上次同步时间", null=True, blank=True)
-
-
-class Case(BaseTable):
-    class Meta:
-        db_table = "case"
-
-    desc = models.CharField("用例描述", max_length=500, null=False)
-    creator_id = models.IntegerField("创建人id", null=False, default=0)
-    project_id = models.IntegerField("项目id", null=False)
-    filename = models.CharField("文件名", max_length=200, null=False, default="")
-    filepath = models.CharField("文件路径", max_length=500, null=False, default="")
 
 
 class Task(models.Model):
     class Meta:
         db_table = "task"
 
-    name = models.CharField("测试计划名称", max_length=50, null=False)
+    name = models.CharField("任务名称", max_length=50, null=False)
+    directory = models.CharField("执行目录", max_length=200, null=False)
     project_id = models.IntegerField("项目id", null=False)
-    task_status = models.CharField("定时任务开关状态", max_length=1, null=True, blank=True, default="0")
-    task_crontab = models.CharField("定时任务crontab表达式", max_length=20, null=True, blank=True, default="")
-
-
-class TaskCase(models.Model):
-    class Meta:
-        db_table = "task_case"
-
-    task_id = models.IntegerField("任务id", null=False)
-    case_id = models.IntegerField("用例id", null=False)
-
-
-class TaskResult(models.Model):
-    class Meta:
-        db_table = "task_result"
-
-    task_id = models.IntegerField("任务id", null=False)
-    result = models.CharField("运行结果", max_length=50, null=False)
+    is_regular = models.CharField("定时开关", max_length=1, null=True, blank=True, default="0")
+    crontab = models.CharField("crontab表达式", max_length=20, null=True, blank=True, default="")
+    status = models.CharField("运行状态", max_length=1, null=True, blank=True, default="0")
     run_time = models.DateTimeField("运行时间", auto_now=True)
-    run_user_id = models.IntegerField("运行人id", null=False, default=0)
+    run_user_id = models.IntegerField("运行人员", null=False, default=0)
     report_path = models.CharField("测试报告", max_length=300, null=False, default="")

@@ -30,7 +30,6 @@ urlpatterns = [
         "delete": "destroy"
     })),
     path(r"projects/cur", project_view.project_cur),  # 项目环境下拉框选项
-    path(r"projects/<int:pk>/gitSync", project_view.git_sync),
     # ------------------项目结束------------------
 
     # ------------------任务开始------------------
@@ -43,17 +42,7 @@ urlpatterns = [
         "put": "update",
         "delete": "destroy"
     })),
-    path(r"cases", task_view.cases),
-    path(r"<int:task_id>/cases", task_view.TaskCaseView.as_view({
-        "get": "list",
-        "post": "add",
-    })),
-    path(r"<int:task_id>/cases/<int:case_id>", task_view.TaskCaseView.as_view({
-        "delete": "remove"
-    })),
     path(r"<int:task_id>/run", run_view.run_task),
-    path(r"<int:task_id>/result", task_view.result),
-    path(r"<int:task_id>/cases/<int:case_id>/result", task_view.case_result),
     path(r"<int:task_id>/<int:user_id>/report", task_view.report),
     # ------------------任务结束------------------
 ]

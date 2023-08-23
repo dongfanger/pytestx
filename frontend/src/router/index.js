@@ -70,30 +70,7 @@ const routes = [
                 },
                 component: () => import("@/views/task/TaskEditor"),
               },
-              {
-                path: "caseList",
-                name: "caseList",
-                meta: {
-                  title: "用例列表",
-                },
-                component: () => import("@/views/task/CaseList"),
-              },
-              {
-                path: "taskResult",
-                name: "taskResult",
-                meta: {
-                  title: "任务运行结果",
-                },
-                component: () => import("@/views/task/TaskResult"),
-              },
             ],
-          },
-          {
-            path: "gitSync",
-            meta: {
-              title: "Git同步",
-            },
-            component: () => import("@/views/task/GitSync.vue"),
           },
         ],
       },

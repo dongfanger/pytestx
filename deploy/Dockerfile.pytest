@@ -2,13 +2,19 @@ FROM python:3.8
 
 ENV LANG C.UTF-8
 ENV TZ=Asia/Shanghai
+ARG TESTS
 
 RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
 
 WORKDIR /app
-COPY ./backend .
+COPY $TESTS .
+COPY ./fixtures .
+COPY ./resources .
+COPY ./conftest.py .
+COPY ./pytest.ini .
+COPY ./requirements.txt .
 RUN pip install -r ./requirements.txt -i \
     https://pypi.tuna.tsinghua.edu.cn/simple \
     --default-timeout=3000
-
-CMD ["python", "./manage.py", "runserver", "0.0.0.0:80"]
+CMD ["git", "clone", "https://gitee.com/dongfanger/tep-project.git"]
+CMD ["pytest", "./tests"]

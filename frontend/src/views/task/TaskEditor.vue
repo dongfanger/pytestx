@@ -9,13 +9,16 @@
       <el-form-item class="custom-size" prop="name" label="任务名称">
         <el-input v-model="form.name" placeholder="请输入任务名称"></el-input>
       </el-form-item>
-      <el-form-item class="custom-size" prop="taskStatus" label="定时任务">
+      <el-form-item class="custom-size" prop="directory" label="执行目录">
+        <el-input v-model="form.directory" placeholder="请输入执行目录，相对路径，如tests/regression"></el-input>
+      </el-form-item>
+      <el-form-item class="custom-size" prop="isRegular" label="定时任务">
         <el-switch :active-text="taskText" active-value="1" active-color="rgb(22,140,0)" inactive-value="0"
-          inactive-color="rgb(200,0,0)" v-model="form.taskStatus" @change="changeScheduleSwitch()">
+          inactive-color="rgb(200,0,0)" v-model="form.isRegular" @change="changeScheduleSwitch()">
           >
         </el-switch>
       </el-form-item>
-      <el-form-item class="custom-size" prop="taskCrontab" label="计划时间" v-if="form.taskStatus === '1'">
+      <el-form-item class="custom-size" prop="taskCrontab" label="计划时间" v-if="form.isRegular === '1'">
         <el-input v-model="form.taskCrontab" placeholder="请输入crontab表达式">
           <el-popover slot="suffix" placement="right" width="450" trigger="hover">
             <div>
@@ -67,7 +70,8 @@ export default {
     return {
       form: {
         name: "",
-        taskStatus: "0",
+        directory: "",
+        isRegular: "0",
         taskCrontab: "",
       },
       rules: {
@@ -88,7 +92,8 @@ export default {
       taskInfo = JSON.parse(taskInfo);
       this.taskId = taskInfo.id;
       this.form.name = taskInfo.name;
-      this.form.taskStatus = taskInfo.taskStatus;
+      this.form.directory = taskInfo.directory;
+      this.form.isRegular = taskInfo.isRegular;
       this.form.taskCrontab = taskInfo.taskCrontab;
     }
     this.getProject();
@@ -107,10 +112,10 @@ export default {
       }
     },
     setTaskText() {
-      if (this.form.taskStatus === "1") {
+      if (this.form.isRegular === "1") {
         this.taskText = "开启";
       }
-      if (this.form.taskStatus === "0") {
+      if (this.form.isRegular === "0") {
         this.taskText = "关闭";
       }
     },
@@ -122,12 +127,14 @@ export default {
         if (valid) {
           this.saving = true;
           this.form.name = this.form.name.trim();
+          this.form.directory = this.form.directory.trim();
           this.form.taskCrontab = this.form.taskCrontab.trim();
           let curProject = JSON.parse(localStorage.getItem("curProject"));
           let projectId = curProject.curProjectId;
           let param = {
             name: this.form.name,
-            taskStatus: this.form.taskStatus,
+            directory: this.form.directory,
+            isRegular: this.form.isRegular,
             taskCrontab: this.form.taskCrontab,
             projectId,
           };
