@@ -12,8 +12,6 @@ from django.urls import path
 from task.views import project_view, run_view, task_view, mock_view, scaffold_view
 
 urlpatterns = [
-    path(r"scaffold", scaffold_view.startproject),  # 项目脚手架
-
     path(r"mock/searchSku", mock_view.search_sku),
     path(r"mock/addCart", mock_view.add_cart),
     path(r"mock/order", mock_view.order),

@@ -51,23 +51,3 @@ def create_scaffold(temp_dir,):
     tep_project_name = "tep-project"
     tep_dir = os.path.join(scaffold_path, tep_project_name)
     copy_folder(tep_dir, temp_dir, ignore_folders=[".idea", ".pytest_cache", "venv", "__pycache__", ".git"])
-
-
-@api_view(['POST'])
-def startproject(request, *args, **kwargs):
-    project_name = request.data.get("projectName")
-    if not project_name:
-        project_name = "new-project"
-    temp_name = project_name + "-" + str(uuid.uuid1()).replace("-", "")
-    temp_dir = os.path.join(EXPORT_PATH, temp_name)
-    temp_dir_project = os.path.join(temp_dir, project_name)
-    create_scaffold(temp_dir_project)
-    zip_filepath = os.path.join(EXPORT_PATH, f"{temp_name}.zip")
-    make_zip(temp_dir, zip_filepath)
-    shutil.rmtree(temp_dir)
-
-    response = StreamingHttpResponse(file_iterator(zip_filepath))
-    response['Content-Type'] = 'application/octet-stream'
-    response['Content-Disposition'] = f'attachment;filename={os.path.split(zip_filepath)[-1]}'
-
-    return response
